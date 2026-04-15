@@ -1,4 +1,4 @@
-package io.aurora.fx.concurrent;
+package io.aurora.fx;
 
 import javafx.application.Application;
 import javafx.application.Platform;

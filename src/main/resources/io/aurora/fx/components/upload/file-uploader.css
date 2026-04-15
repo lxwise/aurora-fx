@@ -1,0 +1,313 @@
+/*
+ * Aurora-FX FileUploader Component Stylesheet
+ * 对标 Element UI Upload 组件样式设计
+ */
+
+/* ============================================================
+ *  Root Container
+ * ============================================================ */
+.file-uploader-root {
+    -fx-spacing: 8px;
+}
+
+/* ============================================================
+ *  Upload Button
+ * ============================================================ */
+.upload-button {
+    -fx-background-color: #409eff;
+    -fx-text-fill: white;
+    -fx-padding: 8px 20px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-graphic-text-gap: 6px;
+}
+
+.upload-button:hover {
+    -fx-background-color: #66b1ff;
+}
+
+.upload-button:pressed {
+    -fx-background-color: #3a8ee6;
+}
+
+.upload-button:disabled {
+    -fx-background-color: #a0cfff;
+    -fx-cursor: default;
+}
+
+.upload-submit-button {
+    -fx-background-color: #67c23a;
+    -fx-text-fill: white;
+    -fx-padding: 8px 20px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.upload-submit-button:hover {
+    -fx-background-color: #85ce61;
+}
+
+.upload-submit-button:pressed {
+    -fx-background-color: #5daf34;
+}
+
+/* ============================================================
+ *  Drag Zone
+ * ============================================================ */
+.upload-drag-zone {
+    -fx-background-color: #fafafa;
+    -fx-border-color: #dcdfe6;
+    -fx-border-style: dashed;
+    -fx-border-width: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.upload-drag-zone:hover {
+    -fx-border-color: #409eff;
+}
+
+.upload-drag-over {
+    -fx-border-color: #409eff;
+    -fx-background-color: #ecf5ff;
+}
+
+.upload-drag-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #606266;
+}
+
+/* ============================================================
+ *  Tip Label
+ * ============================================================ */
+.upload-tip {
+    -fx-font-size: 12px;
+    -fx-text-fill: #909399;
+    -fx-padding: 4px 0 0 0;
+}
+
+/* ============================================================
+ *  Picture Card Mode (照片墙)
+ * ============================================================ */
+.file-uploader-card-container {
+    -fx-hgap: 8px;
+    -fx-vgap: 8px;
+}
+
+.upload-card {
+    -fx-background-color: white;
+    -fx-border-color: #c0ccda;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-alignment: center;
+}
+
+.upload-card:hover {
+    -fx-border-color: #409eff;
+}
+
+.upload-card-error {
+    -fx-border-color: #f56c6c;
+    -fx-border-width: 2px;
+}
+
+.upload-card-trigger {
+    -fx-background-color: #fafafa;
+    -fx-border-color: #dcdfe6;
+    -fx-border-style: dashed;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+.upload-card-trigger:hover {
+    -fx-border-color: #409eff;
+    -fx-background-color: #f0f7ff;
+}
+
+.upload-card-mask {
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-background-radius: 5px;
+}
+
+.upload-card-actions {
+    -fx-alignment: center;
+    -fx-spacing: 16px;
+}
+
+.upload-card-progress {
+    -fx-accent: #409eff;
+}
+
+/* 成功对勾徽章：右下角绿色三角+白色对勾 */
+.upload-card-success-badge {
+    -fx-background-color: #67c23a;
+    -fx-background-radius: 0 0 5 0;
+    -fx-alignment: center;
+}
+
+.upload-card-filename {
+    -fx-font-size: 11px;
+    -fx-text-fill: #606266;
+    -fx-text-overrun: ellipsis;
+    -fx-alignment: center;
+}
+
+/* ============================================================
+ *  File List Mode (TEXT / PICTURE 列表)
+ * ============================================================ */
+.file-uploader-list-container {
+    -fx-spacing: 2px;
+    -fx-padding: 6px 0 0 0;
+}
+
+.upload-list-item {
+    -fx-background-color: transparent;
+    -fx-padding: 6px 10px;
+    -fx-background-radius: 4px;
+}
+
+.upload-list-item:hover {
+    -fx-background-color: #f5f7fa;
+}
+
+.upload-list-item-wrapper {
+    -fx-background-radius: 4px;
+}
+
+.upload-list-item-success {
+    /* 成功项不需要特殊背景 */
+}
+
+.upload-list-item-success:hover {
+    -fx-background-color: #f0f9eb;
+}
+
+.upload-list-item-error {
+    -fx-background-color: #fef0f0;
+}
+
+.upload-list-item-error:hover {
+    -fx-background-color: #fde2e2;
+}
+
+.upload-list-item-error .upload-list-item-name {
+    -fx-text-fill: #f56c6c;
+}
+
+.upload-list-item-uploading:hover {
+    -fx-background-color: #ecf5ff;
+}
+
+.upload-list-item-name {
+    -fx-font-size: 14px;
+    -fx-text-fill: #606266;
+}
+
+.upload-list-item-success .upload-list-item-name {
+    -fx-text-fill: #67c23a;
+}
+
+.upload-list-item-size {
+    -fx-font-size: 12px;
+    -fx-text-fill: #909399;
+}
+
+.upload-list-item-close {
+    -fx-cursor: hand;
+}
+
+.upload-list-item-picture {
+    -fx-padding: 8px;
+    -fx-border-color: #e4e7ed;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.upload-list-item-picture.upload-list-item-success {
+    -fx-border-color: #b3e19d;
+}
+
+.upload-list-item-picture.upload-list-item-error {
+    -fx-border-color: #fab6b6;
+}
+
+.upload-list-thumb {
+    -fx-background-color: #fafafa;
+    -fx-border-color: #e4e7ed;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-alignment: center;
+}
+
+.upload-list-progress {
+    -fx-accent: #409eff;
+}
+
+/* ============================================================
+ *  Progress Bar Customization
+ * ============================================================ */
+.progress-bar > .track {
+    -fx-background-color: #ebeef5;
+    -fx-background-radius: 3px;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: #409eff;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0;
+}
+
+/* ============================================================
+ *  Image Crop Pane (头像裁切)
+ * ============================================================ */
+.image-crop-pane {
+    -fx-background-color: #f5f7fa;
+    -fx-border-color: #dcdfe6;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.image-crop-toolbar {
+    -fx-background-color: #fafafa;
+    -fx-border-color: #e4e7ed;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8px 12px;
+    -fx-spacing: 8px;
+    -fx-alignment: center;
+}
+
+.image-crop-toolbar .button {
+    -fx-background-color: #409eff;
+    -fx-text-fill: white;
+    -fx-padding: 6px 16px;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.image-crop-toolbar .button:hover {
+    -fx-background-color: #66b1ff;
+}
+
+.image-crop-toolbar .button.cancel-button {
+    -fx-background-color: white;
+    -fx-text-fill: #606266;
+    -fx-border-color: #dcdfe6;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.image-crop-toolbar .button.cancel-button:hover {
+    -fx-background-color: #f5f7fa;
+    -fx-border-color: #c0c4cc;
+}
