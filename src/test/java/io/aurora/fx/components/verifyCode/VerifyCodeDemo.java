@@ -14,8 +14,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +32,12 @@ import java.util.List;
  */
 public class VerifyCodeDemo extends Application {
 
-    private static final List<String> BACKGROUND_IMAGES = new ArrayList<>();
+    // 背景图片路径（请根据实际情况修改）
+    private static final List<String> BACKGROUND_IMAGES = Arrays.asList(
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl1.jpg",
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl2.jpg",
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl3.jpg"
+    );
 
     // 主容器
     private VBox mainContainer;
@@ -49,8 +52,6 @@ public class VerifyCodeDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        loadBackgroundImages();
-
         // 设置窗口标题
         primaryStage.setTitle("JavaFX验证码系统演示");
 
@@ -66,30 +67,6 @@ public class VerifyCodeDemo extends Application {
         
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    /**
-     * 图片加载方法
-     */
-    private void loadBackgroundImages() {
-        BACKGROUND_IMAGES.clear();
-
-        for (int i = 1; i <= 5; i++) {
-            String path = "images/bg" + i + ".png";
-
-            URL resource = getClass().getClassLoader().getResource(path);
-            if (resource != null) {
-                // ✔ 推荐：直接存 classpath 相对路径
-                BACKGROUND_IMAGES.add(path);
-                System.out.println("已加载: " + path);
-            } else {
-                System.err.println("未找到: " + path);
-            }
-        }
-
-        if (BACKGROUND_IMAGES.isEmpty()) {
-            throw new RuntimeException("没有加载到任何图片！");
-        }
     }
 
     /**

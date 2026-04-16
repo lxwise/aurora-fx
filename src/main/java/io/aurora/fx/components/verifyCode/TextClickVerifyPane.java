@@ -2,6 +2,7 @@ package io.aurora.fx.components.verifyCode;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
@@ -26,14 +27,50 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 文字点选验证码组件
  * 用户需要按顺序点击指定的文字
+ * <p>
+ * 使用示例：
+ * <pre>
+ * VerifyConfig config = VerifyConfig.textClick().clickTextCount(3);
+ * TextClickVerifyPane pane = new TextClickVerifyPane(config);
+ * pane.setVerifyData(verifyData);
+ * pane.setOnVerifyComplete(result -> {
+ *     if (result.isSuccess()) {
+ *         System.out.println("验证成功");
+ *     }
+ * });
+ * </pre>
+ *
  * @author JavaFX Team
+ * @since 1.0.0
  */
 public class TextClickVerifyPane extends VBox implements VerifyPane {
+
+    private static final Logger LOGGER = Logger.getLogger(TextClickVerifyPane.class.getName());
+
+    /**
+     * 定时任务执行器，用于延迟重置操作
+     * 使用守护线程，不阻止JVM退出
+     */
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "TextClickVerifyPane-Scheduler");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
+     * 验证失败后自动重置的延迟时间（毫秒）
+     */
+    private static final long FAIL_RESET_DELAY_MS = 1500;
 
     private static final String DEFAULT_STYLE =
             "-fx-background-color: #ffffff; " +
@@ -68,10 +105,8 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
     private Consumer<VerifyResult> onVerifyComplete;
     private Runnable onRefresh;
 
-    // 使用VerifyPane接口中定义的VerifyState枚举
-
     /**
-     * 创建文字点选验证码组件
+     * 创建文字点选验证码组件（使用默认配置）
      */
     public TextClickVerifyPane() {
         this(new VerifyConfig(VerifyType.TEXT_CLICK));
@@ -79,10 +114,10 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
 
     /**
      * 创建文字点选验证码组件
-     * @param config 验证码配置
+     * @param config 验证码配置，不能为null
      */
     public TextClickVerifyPane(VerifyConfig config) {
-        this.config = config;
+        this.config = config != null ? config : new VerifyConfig(VerifyType.TEXT_CLICK);
         this.behaviorTracker = new BehaviorTracker();
         this.behaviorTracker.setContinuousMode(false); // 点击模式
         initializeUI();
@@ -163,6 +198,12 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
     private void setupEventHandlers() {
         clickPane.setOnMouseClicked(e -> {
             if (state.get() != VerifyPane.VerifyState.READY) {
+                return;
+            }
+
+            // 防御性检查：verifyData 必须已设置
+            if (verifyData == null || verifyData.getTargetTexts() == null) {
+                LOGGER.warning("验证码数据尚未设置，忽略点击事件");
                 return;
             }
 
@@ -278,9 +319,13 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
         // 显示结果动画
         playResultAnimation(success);
 
-        // 回调
+        // 回调（带异常保护）
         if (onVerifyComplete != null) {
-            onVerifyComplete.accept(result);
+            try {
+                onVerifyComplete.accept(result);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "验证回调执行异常", e);
+            }
         }
     }
 
@@ -298,7 +343,7 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
         int tolerance = baseTolerance + 25; // 总容差 = 基础容差 + 字体相关容差
 
         if (userClickPositions.size() != targetPositions.size()) {
-            System.out.println("点击数量不匹配: 用户=" + userClickPositions.size() +
+            LOGGER.fine("点击数量不匹配: 用户=" + userClickPositions.size() +
                              ", 目标=" + targetPositions.size());
             return false;
         }
@@ -312,19 +357,18 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
             double dy = target.y - user.y;
             double distance = Math.sqrt(dx * dx + dy * dy);
 
-            // 调试输出（帮助定位问题）
-            System.out.println("点击 " + (i + 1) + ": 目标=(" + target.x + "," + target.y +
+            LOGGER.fine("点击 " + (i + 1) + ": 目标=(" + target.x + "," + target.y +
                              "), 用户=(" + user.x + "," + user.y +
                              "), 距离=" + String.format("%.2f", distance) +
                              ", 容差=" + tolerance);
 
             if (distance > tolerance) {
-                System.out.println("点击 " + (i + 1) + " 超出容差范围");
+                LOGGER.fine("点击 " + (i + 1) + " 超出容差范围");
                 return false;
             }
         }
 
-        System.out.println("所有点击位置验证通过");
+        LOGGER.fine("所有点击位置验证通过");
         return true;
     }
 
@@ -339,19 +383,15 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
         ft.setCycleCount(2);
         ft.play();
 
+        // 失败后自动重置（使用scheduler替代new Thread）
         if (!success) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1500);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                javafx.application.Platform.runLater(() -> {
+            scheduler.schedule(() -> {
+                Platform.runLater(() -> {
                     if (state.get() == VerifyPane.VerifyState.FAIL) {
                         reset();
                     }
                 });
-            }).start();
+            }, FAIL_RESET_DELAY_MS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -388,8 +428,14 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
     /**
      * 设置验证码数据
      * 根据实际图片尺寸调整UI组件大小，确保坐标映射准确
+     *
+     * @param data 文字点选验证码数据，不能为null
      */
     public void setVerifyData(VerifyImageUtil.TextClickVerifyData data) {
+        if (data == null) {
+            LOGGER.warning("验证码数据不能为 null");
+            return;
+        }
         this.verifyData = data;
 
         try {
@@ -425,7 +471,7 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
             state.set(VerifyPane.VerifyState.READY);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "设置验证码数据失败", e);
             state.set(VerifyPane.VerifyState.FAIL);
         }
     }
@@ -476,6 +522,11 @@ public class TextClickVerifyPane extends VBox implements VerifyPane {
 
     public void setOnVerifyComplete(Consumer<VerifyResult> callback) {
         this.onVerifyComplete = callback;
+    }
+
+    @Override
+    public Consumer<VerifyResult> getOnVerifyComplete() {
+        return onVerifyComplete;
     }
 
     public void setOnRefresh(Runnable callback) {

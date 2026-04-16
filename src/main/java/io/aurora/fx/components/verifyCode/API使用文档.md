@@ -1,51 +1,157 @@
-# JavaFX 验证码组件库 API 使用文档
+# 验证码组件 API 文档
 
 ## 目录
+
 1. [概述](#概述)
-2. [快速开始](#快速开始)
-3. [核心接口详解](#核心接口详解)
-4. [配置类详解](#配置类详解)
-5. [验证码组件详解](#验证码组件详解)
-6. [工厂类详解](#工厂类详解)
-7. [主题系统详解](#主题系统详解)
-8. [工具类详解](#工具类详解)
-9. [事件处理详解](#事件处理详解)
-10. [最佳实践](#最佳实践)
-11. [完整示例代码](#完整示例代码)
-12. [常见问题](#常见问题)
+2. [组件架构图](#组件架构图)
+3. [核心接口](#核心接口)
+   - [VerifyPane - 验证码组件统一接口](#verifypane---验证码组件统一接口)
+4. [UI组件类](#ui组件类)
+   - [SliderVerifyPane - 滑块验证码组件](#sliderverifypane---滑块验证码组件)
+   - [TextClickVerifyPane - 文字点选验证码组件](#textclickverifypane---文字点选验证码组件)
+   - [ArithmeticVerifyPane - 算术验证码组件](#arithmeticverifypane---算术验证码组件)
+5. [工具类](#工具类)
+   - [VerifyImageUtil - 验证码图片工具类](#verifyimageutil---验证码图片工具类)
+   - [VerifyCodeFactory - 验证码工厂类](#verifycodefactory---验证码工厂类)
+   - [VerifyStageManager - 窗口管理器](#verifystagemanager---窗口管理器)
+6. [配置类](#配置类)
+   - [VerifyConfig - 验证码配置类](#verifyconfig---验证码配置类)
+   - [VerifyTheme - 主题配置类](#verifytheme---主题配置类)
+   - [VerifyMessages - 消息配置类](#verifymessages---消息配置类)
+7. [数据类](#数据类)
+   - [VerifyImage - 滑块验证码数据类](#verifyimage---滑块验证码数据类)
+   - [VerifyResult - 验证结果类](#verifyresult---验证结果类)
+   - [TrajectoryData - 行为轨迹数据类](#trajectorydata---行为轨迹数据类)
+   - [BehaviorTracker - 行为追踪器](#behaviortracker---行为追踪器)
+8. [枚举类型](#枚举类型)
+   - [VerifyType - 验证码类型枚举](#verifytype---验证码类型枚举)
+   - [VerifyState - 验证状态枚举](#verifystate---验证状态枚举)
+9. [异常类](#异常类)
+   - [VerifyException - 验证码异常类](#verifyexception---验证码异常类)
+10. [使用场景示例](#使用场景示例)
+11. [错误处理与异常](#错误处理与异常)
+12. [组件间关系](#组件间关系)
+13. [性能考虑与最佳实践](#性能考虑与最佳实践)
 
 ---
 
 ## 概述
 
-JavaFX 验证码组件库是一套完整的验证码解决方案，提供三种验证码类型，支持统一接口、主题定制、行为轨迹检测等高级功能。
+本验证码组件是一个功能完整的 Java/JavaFX 验证码生成与验证系统，支持三种验证码类型：
 
-### 支持的验证码类型
+| 类型 | 组件类 | 描述 | 适用场景 |
+|------|--------|------|----------|
+| **滑动拼图验证码** | SliderVerifyPane | 用户拖动滑块拼图到正确位置 | 登录验证、支付验证 |
+| **文字点选验证码** | TextClickVerifyPane | 用户按顺序点击图片中的指定文字 | 防机器人验证、注册验证 |
+| **算术验证码** | ArithmeticVerifyPane | 用户输入数学算式的答案 | 表单验证、低安全级别场景 |
 
-| 类型 | 说明 | 适用场景 |
-|------|------|----------|
-| **滑动拼图** | 拖动滑块完成拼图 | 高安全性场景 |
-| **文字点选** | 按顺序点击指定文字 | 中等安全场景 |
-| **算术验证** | 计算并输入算式结果 | 低安全场景、教育类应用 |
+### 主要特性
 
-### 核心特性
-
-- **统一接口设计**：所有组件实现 `VerifyPane` 接口
-- **Builder 模式配置**：链式调用，简洁优雅
-- **主题定制**：支持预设主题和自定义主题
-- **行为轨迹检测**：防止机器人攻击
-- **开箱即用**：提供工厂类快速创建
+- 支持三种验证码类型
+- 统一的 VerifyPane 接口
+- 可配置难度级别（简单/中等/困难）
+- 支持主题定制（浅色/深色/蓝色/绿色）
+- 支持国际化（中文/英文）
+- 行为轨迹追踪与反机器人检测
+- 支持 Base64 图片编码
+- 独立窗口显示与模态窗口支持
+- 线程安全设计
 
 ---
 
-## 快速开始
+## 组件架构图
 
-### 环境要求
+```mermaid
+graph TB
+    subgraph 核心接口
+        A[VerifyPane<br/>统一接口]
+    end
+    
+    subgraph UI组件
+        B[SliderVerifyPane<br/>滑块验证]
+        C[TextClickVerifyPane<br/>文字点选]
+        D[ArithmeticVerifyPane<br/>算术验证]
+    end
+    
+    subgraph 工具类
+        E[VerifyImageUtil<br/>图片工具]
+        F[VerifyCodeFactory<br/>工厂类]
+        G[VerifyStageManager<br/>窗口管理]
+    end
+    
+    subgraph 配置类
+        H[VerifyConfig<br/>配置类]
+        I[VerifyTheme<br/>主题]
+        J[VerifyMessages<br/>消息]
+    end
+    
+    subgraph 数据类
+        K[VerifyImage<br/>滑块数据]
+        L[VerifyResult<br/>验证结果]
+        M[TrajectoryData<br/>轨迹数据]
+        N[BehaviorTracker<br/>行为追踪]
+    end
+    
+    A --> B
+    A --> C
+    A --> D
+    B --> H
+    C --> H
+    D --> H
+    F --> B
+    F --> C
+    F --> D
+    G --> A
+    H --> I
+    H --> J
+    B --> N
+    C --> N
+    N --> M
+```
 
-- Java 8 或更高版本
-- JavaFX 8 或更高版本
+---
 
-### 最小示例
+## 核心接口
+
+### VerifyPane - 验证码组件统一接口
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyPane`
+
+**用途**: 所有验证码组件必须实现的统一接口，定义了验证码组件的基本行为。
+
+**接口定义**:
+```java
+public interface VerifyPane
+```
+
+#### 核心方法
+
+| 方法名 | 返回类型 | 参数 | 说明 |
+|--------|----------|------|------|
+| getRoot() | Pane | 无 | 获取验证码组件的根容器，可直接添加到场景中 |
+| getState() | VerifyState | 无 | 获取当前验证状态 |
+| stateProperty() | ObjectProperty\<VerifyState\> | 无 | 获取验证状态属性（用于绑定） |
+| setOnVerifyComplete() | void | Consumer\<VerifyResult\> | 设置验证完成回调 |
+| getOnVerifyComplete() | Consumer\<VerifyResult\> | 无 | 获取验证完成回调 |
+| setOnRefresh() | void | Runnable | 设置刷新回调 |
+| refresh() | void | 无 | 刷新验证码 |
+| reset() | void | 无 | 重置验证码状态 |
+| getConfig() | VerifyConfig | 无 | 获取验证码配置 |
+
+#### 窗口显示方法（默认方法）
+
+| 方法名 | 返回类型 | 参数 | 说明 |
+|--------|----------|------|------|
+| show() | Stage | 无 | 显示验证码窗口 |
+| show(width, height) | Stage | double, double | 显示指定尺寸的窗口 |
+| show(width, height, title) | Stage | double, double, String | 显示指定尺寸和标题的窗口 |
+| showModal(parentStage) | Stage | Stage | 显示模态窗口 |
+| showModal(parentStage, width, height) | Stage | Stage, double, double | 显示指定尺寸的模态窗口 |
+| close() | void | 无 | 关闭验证码窗口 |
+| isShowing() | boolean | 无 | 检查窗口是否正在显示 |
+| getStage() | Stage | 无 | 获取对应的窗口 |
+
+#### 使用示例
 
 ```java
 import com.javafx.test.verifyCode.*;
@@ -107,422 +213,88 @@ public class QuickStart extends Application {
 }
 ```
 
-### 运行效果
-
-运行上述代码，您将看到一个滑动拼图验证码组件。拖动滑块完成拼图后，控制台会输出验证结果。
-
 ---
 
-## 核心接口详解
+## UI组件类
 
-### VerifyPane 接口
+### SliderVerifyPane - 滑块验证码组件
 
-`VerifyPane` 是所有验证码组件的统一接口，定义了标准操作方法。
+**完整类名**: `com.javafx.test.verifyCode.SliderVerifyPane`
 
-#### 接口定义
+**用途**: 提供类似极验的滑块验证功能。
 
+**类定义**:
 ```java
-public interface VerifyPane {
-    
-    /**
-     * 获取验证码组件的根容器
-     * @return JavaFX Pane对象，可直接添加到场景中
-     */
-    Pane getRoot();
-
-    /**
-     * 获取当前验证状态
-     * @return 验证状态枚举值
-     */
-    VerifyState getState();
-
-    /**
-     * 获取验证状态属性（用于绑定）
-     * @return 验证状态的ObjectProperty
-     */
-    ObjectProperty<VerifyState> stateProperty();
-
-    /**
-     * 设置验证完成回调
-     * @param callback 验证完成时的回调函数
-     */
-    void setOnVerifyComplete(Consumer<VerifyResult> callback);
-
-    /**
-     * 设置刷新回调
-     * @param callback 刷新时的回调函数
-     */
-    void setOnRefresh(Runnable callback);
-
-    /**
-     * 刷新验证码
-     * 生成新的验证码内容
-     */
-    void refresh();
-
-    /**
-     * 重置验证码状态
-     * 清空用户操作，恢复到初始状态
-     */
-    void reset();
-
-    /**
-     * 获取验证码配置
-     * @return 当前配置对象
-     */
-    VerifyConfig getConfig();
-}
+public class SliderVerifyPane extends VBox implements VerifyPane
 ```
-
-#### 使用示例
-
-```java
-// 使用接口类型声明（推荐）
-VerifyPane verifyPane = new SliderVerifyPane();
-
-// 获取根容器添加到界面
-Pane root = verifyPane.getRoot();
-container.getChildren().add(root);
-
-// 监听状态变化
-verifyPane.stateProperty().addListener((obs, oldVal, newVal) -> {
-    System.out.println("状态变化：" + oldVal + " -> " + newVal);
-});
-
-// 获取当前状态
-VerifyState currentState = verifyPane.getState();
-
-// 刷新验证码
-verifyPane.refresh();
-
-// 重置状态
-verifyPane.reset();
-```
-
-### VerifyState 枚举
-
-```java
-public enum VerifyState {
-    READY("ready"),       // 准备就绪，等待用户操作
-    LOADING("loading"),   // 加载中
-    VERIFYING("verifying"), // 验证中
-    SUCCESS("success"),   // 验证成功
-    FAIL("fail");         // 验证失败
-
-    private final String code;
-    
-    // 获取状态代码
-    public String getCode() { return code; }
-    
-    // 根据代码获取状态
-    public static VerifyState fromCode(String code) { ... }
-}
-```
-
-#### 使用示例
-
-```java
-// 状态判断
-if (verifyPane.getState() == VerifyState.SUCCESS) {
-    System.out.println("验证已通过");
-}
-
-// 获取状态代码
-String code = verifyPane.getState().getCode(); // "success"
-
-// 从代码转换状态
-VerifyState state = VerifyState.fromCode("ready"); // VerifyState.READY
-```
-
-### VerifyResult 类
-
-```java
-public class VerifyResult {
-    private boolean success;           // 验证是否成功
-    private String message;            // 结果消息
-    private long duration;             // 验证耗时（毫秒）
-    private TrajectoryData trajectoryData; // 行为轨迹数据
-    private VerifyType verifyType;     // 验证码类型
-    private String errorCode;          // 错误代码
-
-    // 静态工厂方法
-    public static VerifyResult success() { ... }
-    public static VerifyResult success(String message) { ... }
-    public static VerifyResult fail(String message) { ... }
-    public static VerifyResult fail(String message, String errorCode) { ... }
-
-    // Getter/Setter
-    public boolean isSuccess() { ... }
-    public String getMessage() { ... }
-    public long getDuration() { ... }
-    public String getErrorCode() { ... }
-    ...
-}
-```
-
-#### 使用示例
-
-```java
-verifyPane.setOnVerifyComplete(result -> {
-    // 判断是否成功
-    if (result.isSuccess()) {
-        System.out.println("✅ 验证成功！");
-        System.out.println("耗时：" + result.getDuration() + "ms");
-    } else {
-        System.out.println("❌ 验证失败");
-        System.out.println("错误信息：" + result.getMessage());
-        System.out.println("错误码：" + result.getErrorCode());
-    }
-});
-```
-
-### VerifyType 枚举
-
-```java
-public enum VerifyType {
-    SLIDER("滑动拼图验证", "slider"),
-    TEXT_CLICK("文字点选验证", "text_click"),
-    ARITHMETIC("算术验证码", "arithmetic"),
-    MIXED("混合验证", "mixed");
-
-    private final String displayName;
-    private final String code;
-
-    public String getDisplayName() { ... }
-    public String getCode() { ... }
-}
-```
-
----
-
-## 配置类详解
-
-### VerifyConfig 类
-
-`VerifyConfig` 是验证码配置类，使用 Builder 模式支持链式调用。
-
-#### 通用配置
-
-```java
-public class VerifyConfig {
-    // 验证码类型
-    private VerifyType verifyType = VerifyType.SLIDER;
-    
-    // 难度级别 (1-简单, 2-中等, 3-困难)
-    private int difficulty = 1;
-    
-    // 验证容差值（像素）
-    private int tolerance = 8;
-    
-    // 是否启用行为轨迹检测
-    private boolean enableBehaviorTracking = true;
-    
-    // 背景图片路径列表
-    private List<String> backgroundImages;
-    
-    // 主题配置
-    private VerifyTheme theme = VerifyTheme.DEFAULT;
-    
-    // 语言区域
-    private Locale locale = Locale.getDefault();
-}
-```
-
-#### 滑动拼图专用配置
-
-```java
-// 背景图尺寸
-private int srcWidth = 350;
-private int srcHeight = 200;
-
-// 滑块尺寸
-private int sliderWidth = 50;
-private int sliderHeight = 50;
-
-// 滑块凸起圆半径
-private int circleRadius = 5;
-
-// 滑块内边距
-private int rectanglePadding = 8;
-```
-
-#### 文字点选专用配置
-
-```java
-// 需要点击的文字数量
-private int clickTextCount = 3;
-
-// 干扰文字数量
-private int interferenceTextCount = 5;
-
-// 文字大小范围 [min, max]
-private int[] fontSizeRange = {16, 24};
-
-// 文字颜色
-private Color textColor = Color.BLACK;
-
-// 提示文字列表
-private List<String> textPool = Arrays.asList(
-    "春", "夏", "秋", "冬", "风", "花", "雪", "月",
-    "山", "水", "云", "天", "地", "人", "和", "美"
-);
-```
-
-#### 算术验证码专用配置
-
-```java
-// 算术运算符
-private List<String> operators = Arrays.asList("+", "-", "×");
-
-// 数字范围 [min, max]
-private int[] numberRange = {1, 50};
-
-// 是否允许负数结果
-private boolean allowNegativeResult = false;
-```
-
-### 配置方法列表
-
-#### 静态工厂方法
-
-```java
-// 创建滑块验证码配置
-VerifyConfig sliderConfig = VerifyConfig.createSlider();
-
-// 创建文字点选验证码配置
-VerifyConfig textConfig = VerifyConfig.createTextClick();
-
-// 创建算术验证码配置
-VerifyConfig arithmeticConfig = VerifyConfig.createArithmetic();
-
-// 创建混合验证码配置
-VerifyConfig mixedConfig = VerifyConfig.createMixed();
-
-// 创建指定类型的默认配置
-VerifyConfig config = VerifyConfig.createDefault(VerifyType.SLIDER);
-```
-
-#### Builder 模式方法
-
-```java
-// 通用配置
-VerifyConfig config = new VerifyConfig()
-    .verifyType(VerifyType.SLIDER)           // 设置类型
-    .size(400, 250)                          // 设置尺寸
-    .tolerance(10)                           // 设置容差
-    .difficulty(2)                           // 设置难度
-    .theme(VerifyTheme.BLUE)                 // 设置主题
-    .enableBehaviorTracking(true)            // 启用行为检测
-    .backgroundImages(Arrays.asList("bg1.jpg", "bg2.jpg")); // 背景图片
-
-// 滑动拼图专用
-VerifyConfig sliderConfig = VerifyConfig.createSlider()
-    .size(400, 250)
-    .sliderSize(50, 50)
-    .tolerance(10)
-    .backgroundImages(imageList);
-
-// 文字点选专用
-VerifyConfig textConfig = VerifyConfig.createTextClick()
-    .size(350, 200)
-    .clickTextCount(3)
-    .interferenceTextCount(5)
-    .tolerance(15)
-    .textPool(Arrays.asList("春", "夏", "秋", "冬"));
-
-// 算术验证码专用
-VerifyConfig arithmeticConfig = VerifyConfig.createArithmetic()
-    .numberRange(10, 99)
-    .operators(Arrays.asList("+", "-", "×"))
-    .allowNegativeResult(false);
-```
-
-### 难度级别说明
-
-```java
-// 难度级别会自动调整相关参数
-VerifyConfig config = VerifyConfig.createSlider()
-    .difficulty(1); // 简单
-
-// 难度影响：
-// 级别 1 (简单)：
-//   - 容差值较大
-//   - 点击文字数量少
-//   - 数字范围小
-//   - 干扰元素少
-
-// 级别 2 (中等)：默认级别
-
-// 级别 3 (困难)：
-//   - 容差值较小
-//   - 点击文字数量多
-//   - 数字范围大
-//   - 干扰元素多
-```
-
-### 容差值说明
-
-```java
-// 容差值决定了验证通过的宽松程度
-VerifyConfig config = VerifyConfig.createSlider()
-    .tolerance(10); // 允许10像素的误差
-
-// 不同验证码类型的默认容差：
-// 滑动拼图：8像素
-// 文字点选：15像素（考虑字体大小和视觉误差）
-// 算术验证码：0（不需要位置容差）
-```
-
----
-
-## 验证码组件详解
-
-### SliderVerifyPane（滑动拼图验证码）
 
 #### 构造方法
 
+| 构造方法 | 参数 | 说明 |
+|----------|------|------|
+| SliderVerifyPane() | 无 | 使用默认配置创建 |
+| SliderVerifyPane(VerifyConfig config) | VerifyConfig | 使用指定配置创建 |
+
+#### 特有方法
+
+| 方法名 | 返回类型 | 参数 | 说明 |
+|--------|----------|------|------|
+| setVerifyImage() | void | VerifyImage | 设置验证码图片数据 |
+| getVerifyImage() | VerifyImage | 无 | 获取当前验证码图片 |
+
+#### 属性详解
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| config | VerifyConfig | - | 验证码配置 |
+| verifyImage | VerifyImage | null | 验证码图片数据 |
+| state | ObjectProperty\<VerifyState\> | READY | 验证状态 |
+| onVerifyComplete | Consumer\<VerifyResult\> | null | 验证完成回调 |
+| onRefresh | Runnable | null | 刷新回调 |
+
+#### 常量定义
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| FAIL_RESET_DELAY_MS | 1500 | 验证失败后自动重置的延迟时间（毫秒） |
+
+#### 使用示例
+
 ```java
-// 默认构造
-SliderVerifyPane sliderPane = new SliderVerifyPane();
+// 创建配置
+VerifyConfig config = VerifyConfig.slider()
+    .size(350, 200)
+    .sliderSize(50, 50)
+    .tolerance(8)
+    .backgroundImages(backgroundImages)
+    .theme(VerifyTheme.BLUE);
 
-// 使用配置
-VerifyConfig config = VerifyConfig.createSlider()
-    .size(400, 250)
-    .tolerance(10);
-SliderVerifyPane sliderPane = new SliderVerifyPane(config);
-```
+// 创建组件
+SliderVerifyPane pane = new SliderVerifyPane(config);
 
-#### 主要方法
+// 生成并设置验证码图片
+VerifyImage verifyImage = VerifyImageUtil.generateSliderVerifyImage(config);
+pane.setVerifyImage(verifyImage);
 
-```java
-// 设置验证码图片
-VerifyImage image = VerifyImageUtil.generateSliderVerifyImage("bg.jpg", config);
-sliderPane.setVerifyImage(image);
-
-// 获取当前验证码图片
-VerifyImage currentImage = sliderPane.getVerifyImage();
-
-// 设置验证完成回调
-sliderPane.setOnVerifyComplete(result -> {
+// 设置回调
+pane.setOnVerifyComplete(result -> {
     if (result.isSuccess()) {
-        System.out.println("验证成功");
+        System.out.println("验证成功！耗时: " + result.getDuration() + "ms");
     }
 });
 
 // 设置刷新回调
-sliderPane.setOnRefresh(() -> {
-    System.out.println("验证码已刷新");
+pane.setOnRefresh(() -> {
+    try {
+        VerifyImage newImage = VerifyImageUtil.generateSliderVerifyImage(config);
+        pane.setVerifyImage(newImage);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 });
-
-// 刷新验证码
-sliderPane.refresh();
-
-// 重置状态
-sliderPane.reset();
-
-// 获取配置
-VerifyConfig config = sliderPane.getConfig();
 ```
+
+---
 
 #### 完整示例
 
@@ -628,34 +400,70 @@ public class SliderDemo extends Application {
 }
 ```
 
-### TextClickVerifyPane（文字点选验证码）
+
+
+### TextClickVerifyPane - 文字点选验证码组件
+
+**完整类名**: `com.javafx.test.verifyCode.TextClickVerifyPane`
+
+**用途**: 用户需要按顺序点击指定的文字。
+
+**类定义**:
+```java
+public class TextClickVerifyPane extends VBox implements VerifyPane
+```
 
 #### 构造方法
 
-```java
-// 默认构造
-TextClickVerifyPane textPane = new TextClickVerifyPane();
+| 构造方法 | 参数 | 说明 |
+|----------|------|------|
+| TextClickVerifyPane() | 无 | 使用默认配置创建 |
+| TextClickVerifyPane(VerifyConfig config) | VerifyConfig | 使用指定配置创建 |
 
-// 使用配置
-VerifyConfig config = VerifyConfig.createTextClick()
+#### 特有方法
+
+| 方法名 | 返回类型 | 参数 | 说明 |
+|--------|----------|------|------|
+| setVerifyData() | void | TextClickVerifyData | 设置验证码数据 |
+
+#### 配置依赖
+
+- `srcWidth`: 图片宽度
+- `srcHeight`: 图片高度
+- `clickTextCount`: 需点击的文字数量（默认3）
+- `interferenceTextCount`: 干扰文字数量（默认5）
+- `textPool`: 文字池
+- `fontSizeRange`: 字体大小范围 [16, 24]
+- `tolerance`: 容差值（默认15）
+
+#### 使用示例
+
+```java
+// 创建配置
+VerifyConfig config = VerifyConfig.textClick()
+    .size(350, 200)
     .clickTextCount(3)
-    .interferenceTextCount(5);
-TextClickVerifyPane textPane = new TextClickVerifyPane(config);
-```
+    .interferenceTextCount(5)
+    .tolerance(15)
+    .textPool(Arrays.asList("春", "夏", "秋", "冬", "风", "花", "雪", "月"));
 
-#### 主要方法
+// 创建组件
+TextClickVerifyPane pane = new TextClickVerifyPane(config);
 
-```java
-// 设置验证码数据
+// 生成验证码
 VerifyImageUtil.TextClickVerifyData data = 
     VerifyImageUtil.generateTextClickVerify(config);
-textPane.setVerifyData(data);
+pane.setVerifyData(data);
 
-// 获取当前验证码数据
-VerifyImageUtil.TextClickVerifyData currentData = textPane.getVerifyData();
-
-// 其他方法与 SliderVerifyPane 相同
+// 设置回调
+pane.setOnVerifyComplete(result -> {
+    if (result.isSuccess()) {
+        System.out.println("点击验证成功！");
+    }
+});
 ```
+
+---
 
 #### 完整示例
 
@@ -750,34 +558,69 @@ public class TextClickDemo extends Application {
 }
 ```
 
-### ArithmeticVerifyPane（算术验证码）
+### ArithmeticVerifyPane - 算术验证码组件
+
+**完整类名**: `com.javafx.test.verifyCode.ArithmeticVerifyPane`
+
+**用途**: 用户需要计算并输入正确的数学运算结果。
+
+**类定义**:
+```java
+public class ArithmeticVerifyPane extends VBox implements VerifyPane
+```
 
 #### 构造方法
 
+| 构造方法 | 参数 | 说明 |
+|----------|------|------|
+| ArithmeticVerifyPane() | 无 | 使用默认配置创建 |
+| ArithmeticVerifyPane(VerifyConfig config) | VerifyConfig | 使用指定配置创建 |
+
+#### 特有方法
+
+| 方法名 | 返回类型 | 参数 | 说明 |
+|--------|----------|------|------|
+| setVerifyData() | void | ArithmeticVerifyData | 设置验证码数据 |
+| getExpression() | String | 无 | 获取当前算式 |
+
+#### 配置依赖
+
+- `srcWidth`: 图片宽度
+- `srcHeight`: 图片高度
+- `operators`: 运算符列表（支持 "+", "-", "×", "÷"）
+- `numberRange`: 数字范围 [1, 50]
+
+#### 使用示例
+
 ```java
-// 默认构造
-ArithmeticVerifyPane arithmeticPane = new ArithmeticVerifyPane();
+// 创建配置
+VerifyConfig config = VerifyConfig.arithmetic()
+    .size(200, 100)
+    .operators(Arrays.asList("+", "-", "×"))
+    .numberRange(1, 50);
 
-// 使用配置
-VerifyConfig config = VerifyConfig.createArithmetic()
-    .numberRange(10, 99)
-    .operators(Arrays.asList("+", "-", "×"));
-ArithmeticVerifyPane arithmeticPane = new ArithmeticVerifyPane(config);
-```
+// 创建组件
+ArithmeticVerifyPane pane = new ArithmeticVerifyPane(config);
 
-#### 主要方法
-
-```java
-// 设置验证码数据
+// 生成验证码
 VerifyImageUtil.ArithmeticVerifyData data = 
     VerifyImageUtil.generateArithmeticVerify(config);
-arithmeticPane.setVerifyData(data);
+pane.setVerifyData(data);
 
-// 获取算式表达式
-String expression = arithmeticPane.getExpression(); // "23 + 45"
+System.out.println("算式: " + data.getExpression());
+System.out.println("答案: " + data.getAnswer());
 
-// 其他方法与 SliderVerifyPane 相同
+// 设置回调
+pane.setOnVerifyComplete(result -> {
+    if (result.isSuccess()) {
+        System.out.println("答案正确！");
+    } else {
+        System.out.println("答案错误！");
+    }
+});
 ```
+
+---
 
 #### 完整示例
 
@@ -870,974 +713,1046 @@ public class ArithmeticDemo extends Application {
 }
 ```
 
----
+## 工具类
 
-## 工厂类详解
+### VerifyImageUtil - 验证码图片工具类
 
-### VerifyCodeFactory
+**完整类名**: `com.javafx.test.verifyCode.VerifyImageUtil`
 
-`VerifyCodeFactory` 提供统一的验证码创建入口，简化组件创建流程。
+**用途**: 提供验证码图片生成、裁剪、编码等功能。
 
-#### 创建方法
+#### 常量定义
+
+| 常量名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| DEFAULT_SRC_WIDTH | int | 350 | 默认源图片宽度（像素） |
+| DEFAULT_SRC_HEIGHT | int | 200 | 默认源图片高度（像素） |
+| DEFAULT_SLIDER_WIDTH | int | 50 | 默认滑块宽度（像素） |
+| DEFAULT_SLIDER_HEIGHT | int | 50 | 默认滑块高度（像素） |
+| DEFAULT_CIRCLE_RADIUS | int | 5 | 默认凸起圆心半径（像素） |
+| DEFAULT_RECTANGLE_PADDING | int | 8 | 默认内边距（像素） |
+| DEFAULT_OUT_PADDING | int | 1 | 默认边框宽度（像素） |
+
+#### 核心方法
+
+##### 滑块验证码生成
 
 ```java
-// ==================== 滑动拼图验证码 ====================
+// 根据配置生成
+public static VerifyImage generateSliderVerifyImage(VerifyConfig config) throws IOException
 
-// 使用默认配置创建
-SliderVerifyPane slider1 = VerifyCodeFactory.createSlider();
+// 根据文件路径生成
+public static VerifyImage generateSliderVerifyImage(String filePath, VerifyConfig config) throws IOException
 
-// 使用自定义配置创建
-VerifyConfig config = VerifyConfig.createSlider()
-    .size(400, 250)
-    .tolerance(10);
-SliderVerifyPane slider2 = VerifyCodeFactory.createSlider(config);
+// 使用默认配置生成
+public static VerifyImage generateSliderVerifyImage(String filePath) throws IOException
 
-// 创建并设置回调
-SliderVerifyPane slider3 = VerifyCodeFactory.createSlider(
-    config,
-    result -> {
-        if (result.isSuccess()) {
-            System.out.println("验证成功");
-        }
-    }
-);
+// 根据场景尺寸生成
+public static VerifyImage generateSliderVerifyImage(String filePath, double sceneWidth, double sceneHeight) throws IOException
+```
 
-// 完整参数创建
-SliderVerifyPane slider4 = VerifyCodeFactory.createSlider(
-    backgroundImages,  // 背景图片列表
-    400, 250,          // 宽高
-    10,                // 容差
-    result -> {        // 回调
-        // 处理结果
-    }
-);
+**参数说明**:
 
-// ==================== 文字点选验证码 ====================
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| config | VerifyConfig | 是 | 验证码配置对象 |
+| filePath | String | 是 | 图片路径（支持URL/classpath/本地文件） |
+| sceneWidth | double | 是 | 场景宽度 |
+| sceneHeight | double | 是 | 场景高度 |
 
+**支持的文件路径格式**:
+- HTTP/HTTPS URL: `http://example.com/image.jpg`
+- File URL: `file:/path/to/image.jpg`
+- JAR URL: `jar:file:/path/to/archive.jar!/image.jpg`
+- Classpath: `img/background.jpg`
+- 本地文件: `C:/images/background.jpg`
+
+##### 文字点选验证码生成
+
+```java
+public static TextClickVerifyData generateTextClickVerify(VerifyConfig config)
+```
+
+##### 算术验证码生成
+
+```java
+public static ArithmeticVerifyData generateArithmeticVerify(VerifyConfig config)
+```
+
+##### 图片处理工具方法
+
+```java
+// 调整图片尺寸
+public static BufferedImage resizeImage(BufferedImage srcImage, int width, int height)
+
+// 图片转Base64
+public static String imageToBase64(BufferedImage image) throws IOException
+
+// Base64转图片
+public static BufferedImage base64ToImage(String base64String)
+
+// 随机获取目录中的图片
+public static BufferedImage getRandomImage(String directoryPath) throws IOException
+
+// 保存图片到文件
+public static void saveImage(BufferedImage image, String filePath) throws IOException
+```
+
+---
+
+### VerifyCodeFactory - 验证码工厂类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyCodeFactory`
+
+**用途**: 提供统一的验证码组件创建入口，简化组件创建流程。
+
+**类定义**:
+```java
+public final class VerifyCodeFactory
+```
+
+#### 滑块验证码创建
+
+```java
 // 使用默认配置
-TextClickVerifyPane text1 = VerifyCodeFactory.createTextClick();
+public static SliderVerifyPane createSlider(List<String> backgroundImages)
 
-// 使用自定义配置
-VerifyConfig textConfig = VerifyConfig.createTextClick()
-    .clickTextCount(3)
-    .interferenceTextCount(5);
-TextClickVerifyPane text2 = VerifyCodeFactory.createTextClick(textConfig);
+// 使用指定配置
+public static SliderVerifyPane createSlider(VerifyConfig config)
 
-// 创建并设置回调
-TextClickVerifyPane text3 = VerifyCodeFactory.createTextClick(
-    textConfig,
-    result -> {
-        // 处理结果
-    }
-);
+// 设置回调
+public static SliderVerifyPane createSlider(VerifyConfig config, Consumer<VerifyResult> onVerifyComplete)
 
-// ==================== 算术验证码 ====================
+// 完整参数
+public static SliderVerifyPane createSlider(List<String> backgroundImages, 
+    int width, int height, int tolerance, Consumer<VerifyResult> onVerifyComplete)
+```
 
+#### 文字点选验证码创建
+
+```java
 // 使用默认配置
-ArithmeticVerifyPane arithmetic1 = VerifyCodeFactory.createArithmetic();
+public static TextClickVerifyPane createTextClick()
 
-// 使用自定义配置
-VerifyConfig arithmeticConfig = VerifyConfig.createArithmetic()
-    .numberRange(10, 99)
-    .operators(Arrays.asList("+", "-", "×"));
-ArithmeticVerifyPane arithmetic2 = VerifyCodeFactory.createArithmetic(arithmeticConfig);
+// 使用指定配置
+public static TextClickVerifyPane createTextClick(VerifyConfig config)
 
-// 创建并设置回调
-ArithmeticVerifyPane arithmetic3 = VerifyCodeFactory.createArithmetic(
-    arithmeticConfig,
-    result -> {
-        // 处理结果
-    }
-);
+// 设置回调
+public static TextClickVerifyPane createTextClick(VerifyConfig config, 
+    Consumer<VerifyResult> onVerifyComplete)
+```
 
-// ==================== 通用创建方法 ====================
+#### 算术验证码创建
 
+```java
+// 使用默认配置
+public static ArithmeticVerifyPane createArithmetic()
+
+// 使用指定配置
+public static ArithmeticVerifyPane createArithmetic(VerifyConfig config)
+
+// 设置回调
+public static ArithmeticVerifyPane createArithmetic(VerifyConfig config, 
+    Consumer<VerifyResult> onVerifyComplete)
+```
+
+#### 通用创建方法
+
+```java
 // 根据类型创建
-Pane verifyPane = VerifyCodeFactory.create(VerifyType.SLIDER, config);
+public static Pane create(VerifyType type, VerifyConfig config)
 
 // 创建随机类型
-Pane randomPane = VerifyCodeFactory.createRandom();
-Pane randomPane2 = VerifyCodeFactory.createRandom(config);
+public static Pane createRandom(VerifyConfig config)
+public static Pane createRandom()
 ```
 
 #### 快速集成方法
 
 ```java
-// ==================== 快速集成到容器 ====================
+// 快速集成滑块验证码
+public static SliderVerifyPane integrateSlider(Pane container, 
+    List<String> backgroundImages, Consumer<VerifyResult> onVerifyComplete)
 
-VBox container = new VBox();
-List<String> backgroundImages = Arrays.asList("bg1.jpg", "bg2.jpg");
-
-// 快速集成滑动拼图
-SliderVerifyPane slider = VerifyCodeFactory.integrateSlider(
-    container,           // 目标容器
-    backgroundImages,    // 背景图片列表
-    result -> {          // 验证完成回调
-        if (result.isSuccess()) {
-            System.out.println("验证成功，继续业务逻辑");
-        }
-    }
-);
-// 组件已自动添加到 container，验证码已初始化
-
-// 快速集成文字点选
-TextClickVerifyPane textClick = VerifyCodeFactory.integrateTextClick(
-    container,
-    result -> {
-        // 处理验证结果
-    }
-);
+// 快速集成文字点选验证码
+public static TextClickVerifyPane integrateTextClick(Pane container, 
+    Consumer<VerifyResult> onVerifyComplete)
 
 // 快速集成算术验证码
-ArithmeticVerifyPane arithmetic = VerifyCodeFactory.integrateArithmetic(
-    container,
-    result -> {
-        // 处理验证结果
-    }
-);
+public static ArithmeticVerifyPane integrateArithmetic(Pane container, 
+    Consumer<VerifyResult> onVerifyComplete)
 ```
 
-#### 工厂类使用示例
+#### 使用示例
 
 ```java
-import com.javafx.test.verifyCode.*;
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-
-public class FactoryDemo extends Application {
-
-    @Override
-    public void start(Stage primaryStage) {
-        VBox root = new VBox(30);
-        root.setStyle("-fx-padding: 20; -fx-alignment: center;");
-
-        Label titleLabel = new Label("工厂类快速创建示例");
-        titleLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
-
-        // 使用工厂方法快速创建
-        HBox verifyBox = new HBox(30);
-        verifyBox.setStyle("-fx-alignment: center;");
-
-        // 1. 滑动拼图 - 一行代码创建
-        SliderVerifyPane slider = VerifyCodeFactory.createSlider(
-                VerifyConfig.createSlider().theme(VerifyTheme.BLUE),
-                result -> System.out.println("滑动拼图: " + (result.isSuccess() ? "成功" : "失败"))
-        );
-
-        // 2. 文字点选 - 一行代码创建
-        TextClickVerifyPane textClick = VerifyCodeFactory.createTextClick(
-                VerifyConfig.createTextClick().clickTextCount(3),
-                result -> System.out.println("文字点选: " + (result.isSuccess() ? "成功" : "失败"))
-        );
-        // 初始化数据
-        textClick.setVerifyData(VerifyImageUtil.generateTextClickVerify(textClick.getConfig()));
-
-        // 3. 算术验证 - 一行代码创建
-        ArithmeticVerifyPane arithmetic = VerifyCodeFactory.createArithmetic(
-                VerifyConfig.createArithmetic().numberRange(1, 20),
-                result -> System.out.println("算术验证: " + (result.isSuccess() ? "成功" : "失败"))
-        );
-        // 初始化数据
-        arithmetic.setVerifyData(VerifyImageUtil.generateArithmeticVerify(arithmetic.getConfig()));
-
-        verifyBox.getChildren().addAll(slider, textClick, arithmetic);
-
-        // 控制按钮
-        HBox controlBox = new HBox(10);
-        Button refreshAllBtn = new Button("全部刷新");
-        refreshAllBtn.setOnAction(e -> {
-            slider.refresh();
-            textClick.refresh();
-            arithmetic.refresh();
-        });
-        controlBox.getChildren().add(refreshAllBtn);
-
-        root.getChildren().addAll(titleLabel, verifyBox, controlBox);
-
-        Scene scene = new Scene(root, 1200, 500);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("工厂类演示");
-        primaryStage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-}
-```
-
----
-
-## 主题系统详解
-
-### VerifyTheme 类
-
-`VerifyTheme` 提供验证码组件的视觉样式配置。
-
-#### 预设主题
-
-```java
-// 默认主题（浅色）
-VerifyTheme.DEFAULT
-
-// 深色主题
-VerifyTheme.DARK
-
-// 蓝色主题
-VerifyTheme.BLUE
-
-// 绿色主题
-VerifyTheme.GREEN
-```
-
-#### 使用预设主题
-
-```java
-VerifyConfig config = VerifyConfig.createSlider()
-    .theme(VerifyTheme.DARK);  // 使用深色主题
-```
-
-#### 自定义主题
-
-```java
-// 使用 Builder 创建自定义主题
-VerifyTheme customTheme = VerifyTheme.builder()
-    // 颜色配置
-    .primaryColor(Color.valueOf("#1890ff"))      // 主色调
-    .successColor(Color.valueOf("#52c41a"))      // 成功颜色
-    .errorColor(Color.valueOf("#ff4d4f"))        // 错误颜色
-    .warningColor(Color.valueOf("#faad14"))      // 警告颜色
-    .backgroundColor(Color.valueOf("#f0f2f5"))   // 背景颜色
-    .cardBackgroundColor(Color.WHITE)            // 卡片背景
-    .textColor(Color.valueOf("#333333"))         // 文字颜色
-    .secondaryTextColor(Color.valueOf("#666666")) // 次要文字
-    .borderColor(Color.valueOf("#d9d9d9"))       // 边框颜色
-    .sliderTrackColor(Color.valueOf("#f0f0f0"))  // 滑块轨道
-    .sliderThumbColor(Color.WHITE)               // 滑块按钮
-    
-    // 字体配置
-    .fontFamily("Microsoft YaHei")  // 字体
-    .baseFontSize(14)               // 基础字号
-    .titleFontSize(16)              // 标题字号
-    .smallFontSize(12)              // 小字号
-    
-    // 尺寸配置
-    .borderRadius(8)    // 圆角大小
-    .padding(10)        // 内边距
-    .shadowRadius(10)   // 阴影半径
-    .build();
-
-// 应用自定义主题
-VerifyConfig config = VerifyConfig.createSlider()
-    .theme(customTheme);
-```
-
-#### 主题样式生成方法
-
-```java
-VerifyTheme theme = VerifyTheme.BLUE;
-
-// 生成卡片样式
-String cardStyle = theme.getCardStyle();
-// 返回: -fx-background-color: rgba(255, 255, 255, 1.00); ...
-
-// 生成滑块轨道样式
-String trackStyle = theme.getSliderTrackStyle();
-
-// 生成滑块按钮样式
-String thumbStyle = theme.getSliderThumbStyle(false, false);
-String thumbSuccessStyle = theme.getSliderThumbStyle(true, false);
-String thumbFailStyle = theme.getSliderThumbStyle(false, true);
-
-// 生成刷新按钮样式
-String refreshBtnStyle = theme.getRefreshButtonStyle();
-
-// 生成状态标签样式
-String statusStyle = theme.getStatusLabelStyle("SUCCESS");
-```
-
-#### 主题使用完整示例
-
-```java
-import com.javafx.test.verifyCode.*;
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-
-public class ThemeDemo extends Application {
-
-    @Override
-    public void start(Stage primaryStage) {
-        VBox root = new VBox(30);
-        root.setStyle("-fx-padding: 20; -fx-alignment: center;");
-
-        Label titleLabel = new Label("主题定制演示");
-        titleLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold;");
-
-        HBox themeBox = new HBox(30);
-        themeBox.setStyle("-fx-alignment: center;");
-
-        // 1. 默认主题
-        VBox defaultBox = createThemeBox("默认主题", VerifyTheme.DEFAULT);
-
-        // 2. 深色主题
-        VBox darkBox = createThemeBox("深色主题", VerifyTheme.DARK);
-
-        // 3. 蓝色主题
-        VBox blueBox = createThemeBox("蓝色主题", VerifyTheme.BLUE);
-
-        // 4. 自定义主题
-        VerifyTheme customTheme = VerifyTheme.builder()
-                .primaryColor(Color.valueOf("#722ed1"))
-                .successColor(Color.valueOf("#13c2c2"))
-                .errorColor(Color.valueOf("#eb2f96"))
-                .backgroundColor(Color.valueOf("#f9f0ff"))
-                .build();
-        VBox customBox = createThemeBox("自定义主题", customTheme);
-
-        themeBox.getChildren().addAll(defaultBox, darkBox, blueBox, customBox);
-
-        root.getChildren().addAll(titleLabel, themeBox);
-
-        Scene scene = new Scene(root, 1400, 400);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("主题系统演示");
-        primaryStage.show();
-    }
-
-    private VBox createThemeBox(String title, VerifyTheme theme) {
-        VBox box = new VBox(10);
-        box.setStyle("-fx-alignment: center;");
-
-        Label titleLabel = new Label(title);
-        titleLabel.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
-
-        VerifyConfig config = VerifyConfig.createSlider()
-                .size(300, 180)
-                .theme(theme);
-
-        SliderVerifyPane slider = new SliderVerifyPane(config);
-
-        box.getChildren().addAll(titleLabel, slider);
-        return box;
-    }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-}
-```
-
----
-
-## 工具类详解
-
-### VerifyImageUtil 类
-
-`VerifyImageUtil` 提供验证码图片的生成、转换等工具方法。
-
-#### 滑动拼图验证码生成
-
-```java
-// 根据文件路径生成
-VerifyImage image = VerifyImageUtil.generateSliderVerifyImage("bg.jpg");
-
-// 根据文件路径和配置生成
-VerifyConfig config = VerifyConfig.createSlider().size(400, 250);
-VerifyImage image = VerifyImageUtil.generateSliderVerifyImage("bg.jpg", config);
-
-// 根据配置生成（自动选择背景图）
-VerifyConfig config = VerifyConfig.createSlider()
-    .backgroundImages(Arrays.asList("bg1.jpg", "bg2.jpg"));
-VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(config);
-```
-
-#### 文字点选验证码生成
-
-```java
-VerifyConfig config = VerifyConfig.createTextClick()
-    .clickTextCount(3)
-    .interferenceTextCount(5);
-
-VerifyImageUtil.TextClickVerifyData data = 
-    VerifyImageUtil.generateTextClickVerify(config);
-
-// 获取数据
-String imageBase64 = data.getImageBase64();
-String hint = data.getHint();  // "请点击：春、夏、秋"
-List<Position> positions = data.getPositions();  // 正确位置
-int width = data.getWidth();
-int height = data.getHeight();
-```
-
-#### 算术验证码生成
-
-```java
-VerifyConfig config = VerifyConfig.createArithmetic()
-    .numberRange(10, 99)
-    .operators(Arrays.asList("+", "-", "×"));
-
-VerifyImageUtil.ArithmeticVerifyData data = 
-    VerifyImageUtil.generateArithmeticVerify(config);
-
-// 获取数据
-String imageBase64 = data.getImageBase64();
-String expression = data.getExpression();  // "23 + 45"
-int answer = data.getAnswer();  // 68
-int width = data.getWidth();
-int height = data.getHeight();
-```
-
-#### 图片转换方法
-
-```java
-// Base64 转 BufferedImage
-BufferedImage image = VerifyImageUtil.base64ToImage(base64String);
-
-// BufferedImage 转 Base64
-String base64 = VerifyImageUtil.imageToBase64(image);
-
-// 调整图片尺寸
-BufferedImage resized = VerifyImageUtil.resizeImage(image, 400, 250);
-```
-
----
-
-## 事件处理详解
-
-### 验证完成回调
-
-```java
-verifyPane.setOnVerifyComplete(result -> {
-    // 判断是否成功
+// 方式1：快速创建
+SliderVerifyPane slider = VerifyCodeFactory.createSlider(backgroundImages);
+slider.setOnVerifyComplete(result -> {
     if (result.isSuccess()) {
-        // 验证成功处理
-        System.out.println("✅ 验证成功！");
-        System.out.println("耗时：" + result.getDuration() + "ms");
-        
-        // 执行业务逻辑
-        // 例如：提交表单、解锁功能等
-        
-    } else {
-        // 验证失败处理
-        System.out.println("❌ 验证失败");
-        System.out.println("错误信息：" + result.getMessage());
-        System.out.println("错误码：" + result.getErrorCode());
-        
-        // 根据错误码处理
-        switch (result.getErrorCode()) {
-            case "ROBOT_DETECTED":
-                showAlert("检测到异常操作，请重试");
-                break;
-            case "POSITION_MISMATCH":
-                showAlert("位置不匹配，请精确操作");
-                break;
-            case "WRONG_ANSWER":
-                showAlert("答案错误，请重新计算");
-                break;
-            default:
-                showAlert(result.getMessage());
-        }
-    }
-});
-```
-
-### 刷新回调
-
-```java
-verifyPane.setOnRefresh(() -> {
-    System.out.println("验证码已刷新");
-    
-    // 可以在这里记录日志
-    // 或执行其他刷新相关操作
-});
-```
-
-### 状态监听
-
-```java
-// 监听状态变化
-verifyPane.stateProperty().addListener((observable, oldValue, newValue) -> {
-    System.out.println("状态变化：" + oldValue + " -> " + newValue);
-    
-    switch (newValue) {
-        case READY:
-            System.out.println("准备就绪");
-            break;
-        case LOADING:
-            System.out.println("加载中...");
-            break;
-        case VERIFYING:
-            System.out.println("验证中...");
-            break;
-        case SUCCESS:
-            System.out.println("验证成功！");
-            break;
-        case FAIL:
-            System.out.println("验证失败！");
-            break;
+        System.out.println("验证成功！");
     }
 });
 
-// 绑定状态到UI
-Label statusLabel = new Label();
-statusLabel.textProperty().bind(
-    verifyPane.stateProperty().asString("状态: %s")
-);
-```
+// 方式2：使用自定义配置
+VerifyConfig config = VerifyConfig.slider()
+    .size(400, 250)
+    .tolerance(10)
+    .theme(VerifyTheme.BLUE);
+SliderVerifyPane slider = VerifyCodeFactory.createSlider(config);
 
----
-
-## 最佳实践
-
-### 1. 验证失败自动刷新
-
-```java
-verifyPane.setOnVerifyComplete(result -> {
-    handleVerifyResult(result);
-    
-    // 验证失败时延迟刷新，让用户看到错误提示
-    if (!result.isSuccess()) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(1500); // 延迟1.5秒
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> verifyPane.refresh());
-        }).start();
-    }
-});
-```
-
-### 2. 使用统一接口编程
-
-```java
-// 推荐：使用接口类型声明
-public VerifyPane createVerifyPane(VerifyType type) {
-    VerifyPane verifyPane;
-    
-    switch (type) {
-        case SLIDER:
-            verifyPane = new SliderVerifyPane(config);
-            break;
-        case TEXT_CLICK:
-            verifyPane = new TextClickVerifyPane(config);
-            break;
-        case ARITHMETIC:
-            verifyPane = new ArithmeticVerifyPane(config);
-            break;
-        default:
-            verifyPane = new SliderVerifyPane(config);
-    }
-    
-    // 统一设置回调
-    verifyPane.setOnVerifyComplete(this::handleResult);
-    
-    return verifyPane;
-}
-
-// 统一处理
-public void handleResult(VerifyResult result) {
+// 方式3：快速集成到容器
+VBox container = new VBox();
+VerifyCodeFactory.integrateSlider(container, backgroundImages, result -> {
     if (result.isSuccess()) {
-        // 成功处理
-    } else {
-        // 失败处理
-    }
-}
-```
-
-### 3. 资源管理
-
-```java
-// 使用 try-catch 处理图片加载异常
-try {
-    VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(
-        imagePath, config
-    );
-    sliderPane.setVerifyImage(image);
-} catch (IOException e) {
-    // 错误处理
-    showError("加载验证码失败：" + e.getMessage());
-    
-    // 记录日志
-    logger.error("验证码加载失败", e);
-}
-```
-
-### 4. 线程安全
-
-```java
-// 在后台线程执行耗时操作
-new Thread(() -> {
-    try {
-        // 耗时操作
-        Thread.sleep(1000);
-        
-        // 更新UI必须在JavaFX线程
-        Platform.runLater(() -> {
-            verifyPane.refresh();
-        });
-    } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-    }
-}).start();
-```
-
----
-
-## 完整示例代码
-
-### 综合演示程序
-
-```java
-import com.javafx.test.verifyCode.*;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.Arrays;
-
-/**
- * 验证码组件综合演示程序
- * 展示三种验证码类型的使用方法和最佳实践
- */
-public class CompleteDemo extends Application {
-
-    private Label statusLabel;
-    private SliderVerifyPane sliderPane;
-    private TextClickVerifyPane textClickPane;
-    private ArithmeticVerifyPane arithmeticPane;
-
-    @Override
-    public void start(Stage primaryStage) {
-        // 主容器
-        VBox root = new VBox(30);
-        root.setPadding(new Insets(30));
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #f5f5f5;");
-
-        // 标题
-        Label titleLabel = new Label("🛡️ 验证码组件综合演示");
-        titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 28));
-        titleLabel.setTextFill(Color.valueOf("#333"));
-
-        // 状态栏
-        statusLabel = new Label("系统就绪，请选择验证码类型进行验证");
-        statusLabel.setFont(Font.font("Microsoft YaHei", 14));
-        statusLabel.setTextFill(Color.valueOf("#666"));
-
-        // 创建三种验证码
-        HBox verifyBox = new HBox(40);
-        verifyBox.setAlignment(Pos.CENTER);
-
-        VBox sliderBox = createSliderVerifyBox();
-        VBox textBox = createTextClickVerifyBox();
-        VBox arithmeticBox = createArithmeticVerifyBox();
-
-        verifyBox.getChildren().addAll(sliderBox, textBox, arithmeticBox);
-
-        // 控制按钮
-        HBox controlBox = createControlBox();
-
-        root.getChildren().addAll(titleLabel, statusLabel, verifyBox, controlBox);
-
-        Scene scene = new Scene(root, 1300, 650);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("验证码组件库演示");
-        primaryStage.show();
-    }
-
-    private VBox createSliderVerifyBox() {
-        VBox box = new VBox(15);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(20));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 8;" +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-
-        Label titleLabel = new Label("🔲 滑动拼图");
-        titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 18));
-        titleLabel.setTextFill(Color.valueOf("#1890ff"));
-
-        // 创建配置
-        VerifyConfig config = VerifyConfig.createSlider()
-                .size(350, 200)
-                .tolerance(10)
-                .difficulty(2)
-                .theme(VerifyTheme.BLUE);
-
-        // 创建组件
-        sliderPane = new SliderVerifyPane(config);
-
-        // 设置回调
-        sliderPane.setOnVerifyComplete(result -> {
-            handleVerifyResult("滑动拼图", result);
-            if (!result.isSuccess()) {
-                delayRefresh(sliderPane);
-            }
-        });
-
-        sliderPane.setOnRefresh(() -> {
-            updateStatus("滑动拼图验证码已刷新");
-        });
-
-        // 初始化
-        refreshSliderVerify();
-
-        box.getChildren().addAll(titleLabel, sliderPane);
-        return box;
-    }
-
-    private VBox createTextClickVerifyBox() {
-        VBox box = new VBox(15);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(20));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 8;" +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-
-        Label titleLabel = new Label("🔤 文字点选");
-        titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 18));
-        titleLabel.setTextFill(Color.valueOf("#52c41a"));
-
-        // 创建配置
-        VerifyConfig config = VerifyConfig.createTextClick()
-                .size(350, 200)
-                .clickTextCount(3)
-                .interferenceTextCount(5)
-                .tolerance(15)
-                .theme(VerifyTheme.GREEN);
-
-        // 创建组件
-        textClickPane = new TextClickVerifyPane(config);
-
-        // 设置回调
-        textClickPane.setOnVerifyComplete(result -> {
-            handleVerifyResult("文字点选", result);
-            if (!result.isSuccess()) {
-                delayRefresh(textClickPane);
-            }
-        });
-
-        textClickPane.setOnRefresh(() -> {
-            refreshTextClickVerify();
-            updateStatus("文字点选验证码已刷新");
-        });
-
-        // 初始化
-        refreshTextClickVerify();
-
-        box.getChildren().addAll(titleLabel, textClickPane);
-        return box;
-    }
-
-    private VBox createArithmeticVerifyBox() {
-        VBox box = new VBox(15);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(20));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 8;" +
-                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-
-        Label titleLabel = new Label("🔢 算术验证");
-        titleLabel.setFont(Font.font("Microsoft YaHei", FontWeight.BOLD, 18));
-        titleLabel.setTextFill(Color.valueOf("#722ed1"));
-
-        // 创建配置
-        VerifyConfig config = VerifyConfig.createArithmetic()
-                .numberRange(10, 99)
-                .operators(Arrays.asList("+", "-", "×"))
-                .theme(VerifyTheme.DEFAULT);
-
-        // 创建组件
-        arithmeticPane = new ArithmeticVerifyPane(config);
-
-        // 设置回调
-        arithmeticPane.setOnVerifyComplete(result -> {
-            handleVerifyResult("算术验证", result);
-            if (!result.isSuccess()) {
-                delayRefresh(arithmeticPane);
-            }
-        });
-
-        arithmeticPane.setOnRefresh(() -> {
-            refreshArithmeticVerify();
-            updateStatus("算术验证码已刷新");
-        });
-
-        // 初始化
-        refreshArithmeticVerify();
-
-        box.getChildren().addAll(titleLabel, arithmeticPane);
-        return box;
-    }
-
-    private HBox createControlBox() {
-        HBox controlBox = new HBox(15);
-        controlBox.setAlignment(Pos.CENTER);
-
-        Button refreshAllBtn = new Button("🔄 全部刷新");
-        refreshAllBtn.setStyle("-fx-background-color: #1890ff; -fx-text-fill: white; " +
-                "-fx-font-size: 14; -fx-padding: 10 20;");
-        refreshAllBtn.setOnAction(e -> {
-            sliderPane.refresh();
-            textClickPane.refresh();
-            arithmeticPane.refresh();
-            updateStatus("所有验证码已刷新");
-        });
-
-        Button resetAllBtn = new Button("↩️ 全部重置");
-        resetAllBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; " +
-                "-fx-font-size: 14; -fx-padding: 10 20;");
-        resetAllBtn.setOnAction(e -> {
-            sliderPane.reset();
-            textClickPane.reset();
-            arithmeticPane.reset();
-            updateStatus("所有验证码已重置");
-        });
-
-        controlBox.getChildren().addAll(refreshAllBtn, resetAllBtn);
-        return controlBox;
-    }
-
-    private void handleVerifyResult(String type, VerifyResult result) {
-        Platform.runLater(() -> {
-            if (result.isSuccess()) {
-                updateStatus("✅ " + type + "验证成功！耗时：" + result.getDuration() + "ms");
-            } else {
-                updateStatus("❌ " + type + "验证失败：" + result.getMessage());
-            }
-        });
-    }
-
-    private void delayRefresh(VerifyPane pane) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(1500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> pane.refresh());
-        }).start();
-    }
-
-    private void refreshSliderVerify() {
-        try {
-            VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(
-                    sliderPane.getConfig()
-            );
-            sliderPane.setVerifyImage(image);
-        } catch (IOException e) {
-            updateStatus("加载滑动拼图验证码失败：" + e.getMessage());
-        }
-    }
-
-    private void refreshTextClickVerify() {
-        VerifyImageUtil.TextClickVerifyData data =
-                VerifyImageUtil.generateTextClickVerify(textClickPane.getConfig());
-        textClickPane.setVerifyData(data);
-    }
-
-    private void refreshArithmeticVerify() {
-        VerifyImageUtil.ArithmeticVerifyData data =
-                VerifyImageUtil.generateArithmeticVerify(arithmeticPane.getConfig());
-        arithmeticPane.setVerifyData(data);
-    }
-
-    private void updateStatus(String message) {
-        Platform.runLater(() -> statusLabel.setText(message));
-    }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-}
-```
-
----
-
-## 常见问题
-
-### Q1: 如何修改验证码尺寸？
-
-```java
-VerifyConfig config = VerifyConfig.createSlider()
-    .size(400, 250);  // 宽度400，高度250
-```
-
-### Q2: 如何自定义背景图片？
-
-```java
-List<String> images = Arrays.asList(
-    "D:/images/bg1.jpg",
-    "D:/images/bg2.jpg",
-    "D:/images/bg3.jpg"
-);
-
-VerifyConfig config = VerifyConfig.createSlider()
-    .backgroundImages(images);
-```
-
-### Q3: 验证失败如何自动刷新？
-
-```java
-verifyPane.setOnVerifyComplete(result -> {
-    if (!result.isSuccess()) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(1500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> verifyPane.refresh());
-        }).start();
+        // 验证成功，继续业务流程
     }
 });
-```
 
-### Q4: 如何监听状态变化？
-
-```java
-verifyPane.stateProperty().addListener((obs, oldVal, newVal) -> {
-    System.out.println("状态变化：" + oldVal + " -> " + newVal);
-});
-```
-
-### Q5: 如何创建随机类型的验证码？
-
-```java
+// 方式4：创建随机类型
 Pane randomPane = VerifyCodeFactory.createRandom();
 ```
 
 ---
 
-## 版本信息
+### VerifyStageManager - 窗口管理器
 
-- **版本**: 1.0.0
-- **作者**: JavaFX Team
-- **更新日期**: 2024
+**完整类名**: `com.javafx.test.verifyCode.VerifyStageManager`
 
-## 相关文件位置
+**用途**: 提供验证码组件的显示和关闭功能，支持多窗口管理和线程安全操作。
 
-所有验证码相关类位于包 `com.javafx.test.verifyCode` 下。
+**类定义**:
+```java
+public class VerifyStageManager
+```
 
-## 演示程序
+#### 常量定义
 
-- `VerifyCodeDemo.java` - 基础使用演示
-- `VerifyPaneCodeDemo.java` - 统一接口演示
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| DEFAULT_WIDTH | 420 | 默认窗口宽度 |
+| DEFAULT_HEIGHT | 320 | 默认窗口高度 |
+| DEFAULT_TITLE | "验证码验证" | 默认窗口标题 |
+| CLOSE_DELAY_MS | 800 | 验证成功后延迟关闭时间（毫秒） |
+
+#### 显示方法
+
+```java
+// 显示验证码窗口
+public static Stage show(VerifyPane verifyPane)
+
+// 指定尺寸显示
+public static Stage show(VerifyPane verifyPane, double width, double height)
+
+// 指定尺寸和标题显示
+public static Stage show(VerifyPane verifyPane, double width, double height, String title)
+
+// 显示模态窗口
+public static Stage showModal(VerifyPane verifyPane, Stage parentStage)
+
+// 显示模态窗口（指定尺寸）
+public static Stage showModal(VerifyPane verifyPane, Stage parentStage, double width, double height)
+```
+
+#### 管理方法
+
+```java
+// 关闭验证码窗口
+public static void close(VerifyPane verifyPane)
+
+// 检查是否正在显示
+public static boolean isShowing(VerifyPane verifyPane)
+
+// 获取对应的窗口
+public static Stage getStage(VerifyPane verifyPane)
+
+// 关闭所有验证码窗口
+public static void closeAll()
+
+// 关闭调度器，释放资源
+public static void shutdown()
+```
+
+#### 使用示例
+
+```java
+SliderVerifyPane pane = new SliderVerifyPane(config);
+
+// 方式1：通过 VerifyPane 的默认方法
+pane.show();
+pane.showModal(parentStage);
+
+// 方式2：通过 VerifyStageManager 静态方法
+VerifyStageManager.show(pane);
+VerifyStageManager.show(pane, 400, 300, "安全验证");
+VerifyStageManager.showModal(pane, parentStage);
+
+// 检查窗口状态
+if (pane.isShowing()) {
+    pane.close();
+}
+
+// 应用退出时释放资源
+VerifyStageManager.shutdown();
+```
+
+---
+
+## 配置类
+
+### VerifyConfig - 验证码配置类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyConfig`
+
+**用途**: 验证码配置类，用于定义验证码的各项参数。
+
+**类定义**:
+```java
+public class VerifyConfig implements Cloneable
+```
+
+#### 构造方法
+
+| 构造方法 | 参数 | 说明 |
+|----------|------|------|
+| VerifyConfig() | 无 | 创建默认配置（SLIDER类型） |
+| VerifyConfig(VerifyType verifyType) | VerifyType | 创建指定类型配置 |
+
+#### 静态工厂方法
+
+```java
+public static VerifyConfig slider()     // 滑块验证码配置
+public static VerifyConfig textClick()  // 文字点选验证码配置
+public static VerifyConfig arithmetic() // 算术验证码配置
+public static VerifyConfig mixed()      // 混合验证码配置
+
+public static VerifyConfig createDefault(VerifyType type)
+public static VerifyConfig createSlider()
+public static VerifyConfig createTextClick()
+public static VerifyConfig createArithmetic()
+public static VerifyConfig createMixed()
+```
+
+#### 属性详解
+
+##### 通用配置属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| verifyType | VerifyType | SLIDER | 验证码类型 |
+| difficulty | int | 1 | 难度级别（1-简单, 2-中等, 3-困难） |
+| tolerance | int | 8 | 验证容差值（像素） |
+| enableBehaviorTracking | boolean | true | 是否启用行为轨迹检测 |
+| backgroundImages | List\<String\> | null | 背景图片路径列表 |
+
+##### 滑块验证码属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| srcWidth | int | 350 | 背景图宽度（像素） |
+| srcHeight | int | 200 | 背景图高度（像素） |
+| sliderWidth | int | 50 | 滑块宽度（像素） |
+| sliderHeight | int | 50 | 滑块高度（像素） |
+| circleRadius | int | 5 | 滑块凸起圆半径（像素） |
+| rectanglePadding | int | 8 | 滑块内边距（像素） |
+
+##### 文字点选验证码属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| clickTextCount | int | 3 | 需点击的文字数量 |
+| interferenceTextCount | int | 5 | 干扰文字数量 |
+| fontSizeRange | int[] | {16, 24} | 字体大小范围 [最小, 最大] |
+| textColor | Color | BLACK | 文字颜色 |
+| textPool | List\<String\> | 24个汉字 | 文字池 |
+
+##### 算术验证码属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| operators | List\<String\> | ["+", "-", "×"] | 运算符列表 |
+| numberRange | int[] | {1, 50} | 数字范围 [最小, 最大] |
+| allowNegativeResult | boolean | false | 是否允许负数结果 |
+
+##### 主题与国际化属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| theme | VerifyTheme | DEFAULT | 主题配置 |
+| locale | Locale | 系统默认 | 语言区域 |
+| messages | VerifyMessages | new VerifyMessages() | 自定义提示文本 |
+
+##### 缓存属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| enableCache | boolean | true | 是否启用图片缓存 |
+| maxCacheSize | int | 10 | 缓存最大数量 |
+
+#### Builder 风格方法
+
+```java
+VerifyConfig config = VerifyConfig.slider()
+    .size(400, 250)
+    .sliderSize(60, 60)
+    .tolerance(10)
+    .difficulty(2)
+    .backgroundImages(backgroundImages)
+    .enableBehaviorTracking(true)
+    .theme(VerifyTheme.BLUE)
+    .locale(Locale.CHINA)
+    .enableCache(true)
+    .maxCacheSize(20);
+```
+
+#### 难度调整
+
+```java
+// 根据难度调整参数
+public void applyDifficulty()
+```
+
+**各级别参数对照表**:
+
+| 参数 | 简单(1) | 中等(2) | 困难(3) |
+|------|---------|---------|---------|
+| 容差(滑块) | 10px | 8px | 5px |
+| 容差(文字) | 20px | 15px | 10px |
+| 点击文字数 | 2 | 3 | 4 |
+| 干扰文字数 | 3 | 5 | 8 |
+| 数字范围 | 1-20 | 1-50 | 1-100 |
+
+---
+
+### VerifyTheme - 主题配置类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyTheme`
+
+**用途**: 定义验证码界面的视觉主题。
+
+#### 预设主题
+
+| 主题常量 | 说明 | 主色调 |
+|----------|------|--------|
+| DEFAULT | 默认浅色主题 | #1e90ff（蓝色） |
+| DARK | 深色主题 | #4361ee |
+| BLUE | 蓝色主题 | #1890ff |
+| GREEN | 绿色主题 | #52c41a |
+
+#### 颜色属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| primaryColor | Color | #1e90ff | 主色调 |
+| successColor | Color | #52c41a | 成功颜色 |
+| errorColor | Color | #ff4d4f | 失败颜色 |
+| warningColor | Color | #faad14 | 警告颜色 |
+| backgroundColor | Color | #f5f5f5 | 背景颜色 |
+| cardBackgroundColor | Color | #ffffff | 卡片背景颜色 |
+| textColor | Color | #333333 | 文字颜色 |
+| secondaryTextColor | Color | #999999 | 次要文字颜色 |
+| borderColor | Color | #e0e0e0 | 边框颜色 |
+| sliderTrackColor | Color | #f0f0f0 | 滑块轨道颜色 |
+| sliderThumbColor | Color | #ffffff | 滑块按钮颜色 |
+
+#### Builder 模式
+
+```java
+VerifyTheme customTheme = VerifyTheme.builder()
+    .primaryColor(Color.valueOf("#ff6600"))
+    .successColor(Color.valueOf("#00cc66"))
+    .errorColor(Color.valueOf("#ff3333"))
+    .backgroundColor(Color.valueOf("#fff8f0"))
+    .borderRadius(12)
+    .fontFamily("SimHei")
+    .baseFontSize(15)
+    .build();
+```
+
+---
+
+### VerifyMessages - 消息配置类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyMessages`
+
+**用途**: 管理验证码界面显示的文本消息，支持国际化。
+
+#### 默认消息值
+
+| 属性 | 默认值（中文） |
+|------|----------------|
+| sliderHint | 向右滑动完成验证 |
+| textClickHint | 请依次点击图中文字 |
+| arithmeticHint | 请输入计算结果 |
+| successMessage | 验证成功 |
+| failMessage | 验证失败，请重试 |
+| robotDetectedMessage | 验证失败，请手动操作 |
+| positionMismatchMessage | 位置不正确，请重试 |
+| refreshButtonText | 刷新 |
+| verifyingMessage | 验证中... |
+| loadingMessage | 加载中... |
+
+#### 使用示例
+
+```java
+VerifyMessages messages = new VerifyMessages()
+    .sliderHint("拖动滑块到正确位置")
+    .successMessage("恭喜，验证通过！")
+    .failMessage("很遗憾，验证失败");
+
+VerifyConfig config = VerifyConfig.slider()
+    .locale(Locale.US)
+    .messages(messages);
+```
+
+---
+
+## 数据类
+
+### VerifyImage - 滑块验证码数据类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyImage`
+
+**用途**: 存储滑块验证码的图片数据和位置信息。
+
+#### 属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| srcImage | String | 原图 Base64 编码 |
+| cutImage | String | 滑块图片 Base64 编码 |
+| xPosition | Integer | 滑块正确 X 坐标位置 |
+| yPosition | Integer | 滑块正确 Y 坐标位置 |
+| srcImageWidth | Integer | 背景图宽度 |
+| srcImageHeight | Integer | 背景图高度 |
+| sliderWidth | Integer | 滑块宽度 |
+| sliderHeight | Integer | 滑块高度 |
+
+#### 验证方法
+
+```java
+// 验证滑块位置
+public boolean verify(int userX, int tolerance)
+
+// 使用默认容差验证
+public boolean verify(int userX)
+```
+
+#### BufferedImage 缓存方法
+
+```java
+public BufferedImage getSrcBufferedImage()  // 获取原图（带缓存）
+public BufferedImage getCutBufferedImage()  // 获取滑块图（带缓存）
+```
+
+---
+
+### VerifyResult - 验证结果类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyResult`
+
+**用途**: 存储验证结果信息。
+
+#### 属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| success | boolean | 验证是否成功 |
+| message | String | 结果消息 |
+| duration | long | 验证耗时（毫秒） |
+| trajectoryData | TrajectoryData | 行为轨迹数据 |
+| verifyType | VerifyType | 验证码类型 |
+| errorCode | String | 错误代码 |
+
+#### 静态工厂方法
+
+```java
+public static VerifyResult success()
+public static VerifyResult success(String message)
+public static VerifyResult fail(String message)
+public static VerifyResult fail(String message, String errorCode)
+```
+
+#### 使用示例
+
+```java
+pane.setOnVerifyComplete(result -> {
+    System.out.println("成功: " + result.isSuccess());
+    System.out.println("消息: " + result.getMessage());
+    System.out.println("耗时: " + result.getDuration() + "ms");
+    System.out.println("类型: " + result.getVerifyType());
+    
+    if (!result.isSuccess()) {
+        System.out.println("错误代码: " + result.getErrorCode());
+    }
+    
+    // 获取行为轨迹数据
+    TrajectoryData trajectory = result.getTrajectoryData();
+    if (trajectory != null) {
+        System.out.println("轨迹点数: " + trajectory.getPointCount());
+        System.out.println("疑似机器人: " + trajectory.isRobotSuspected());
+    }
+});
+```
+
+---
+
+### TrajectoryData - 行为轨迹数据类
+
+**完整类名**: `com.javafx.test.verifyCode.TrajectoryData`
+
+**用途**: 记录和分析用户交互行为，实现反机器人检测。
+
+#### 属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| points | List\<TrajectoryPoint\> | 轨迹点列表 |
+| startTime | long | 开始时间戳 |
+| endTime | long | 结束时间戳 |
+| totalDistance | double | 总移动距离 |
+| averageSpeed | double | 平均速度（像素/毫秒） |
+| maxSpeed | double | 最大速度 |
+| directionChanges | int | 方向变化次数 |
+| robotSuspected | boolean | 是否疑似机器人 |
+| continuousMode | boolean | 轨迹模式（true=拖拽，false=点击） |
+
+#### 主要方法
+
+```java
+// 添加轨迹点
+public void addPoint(double x, double y, long timestamp)
+
+// 结束记录并计算统计数据
+public void finish()
+
+// 获取轨迹点数量
+public int getPointCount()
+
+// 获取总时长
+public long getDuration()
+```
+
+#### 轨迹点内部类
+
+```java
+public static class TrajectoryPoint {
+    public final double x;        // X坐标
+    public final double y;        // Y坐标
+    public final long timestamp;  // 时间戳
+}
+```
+
+#### 机器人检测规则
+
+**拖拽模式（滑块）**:
+- 轨迹点少于3个
+- 完成时间少于100毫秒
+- 方向变化超过30次
+- 速度极其均匀（标准差 < 0.0005）
+
+**点击模式（文字点选）**:
+- 点击点少于2个
+- 完成时间少于150毫秒
+- 点击时间间隔完全相同（标准差 < 2ms）
+
+---
+
+### BehaviorTracker - 行为追踪器
+
+**完整类名**: `com.javafx.test.verifyCode.BehaviorTracker`
+
+**用途**: 记录和分析用户交互行为。
+
+#### 属性
+
+| 属性名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| minSampleInterval | long | 10 | 最小采样间隔（毫秒） |
+| continuousMode | boolean | true | 轨迹模式（true=拖拽，false=点击） |
+
+#### 主要方法
+
+```java
+// 开始追踪
+public void startTracking()
+
+// 记录鼠标事件（拖拽模式）
+public void trackEvent(MouseEvent event)
+
+// 记录坐标点（点击模式）
+public void trackPoint(double x, double y)
+
+// 停止追踪并获取轨迹数据
+public TrajectoryData stopTracking()
+
+// 获取当前轨迹数据
+public TrajectoryData getTrajectoryData()
+
+// 是否正在追踪
+public boolean isTracking()
+
+// 重置追踪器
+public void reset()
+
+// 获取分析报告
+public String getAnalysisReport()
+```
+
+#### 使用示例
+
+```java
+BehaviorTracker tracker = new BehaviorTracker();
+tracker.setContinuousMode(true); // 拖拽模式
+
+// 开始追踪
+tracker.startTracking();
+
+// 记录事件
+node.setOnMouseDragged(e -> tracker.trackEvent(e));
+
+// 停止追踪
+TrajectoryData data = tracker.stopTracking();
+
+// 查看分析报告
+System.out.println(tracker.getAnalysisReport());
+```
+
+---
+
+## 枚举类型
+
+### VerifyType - 验证码类型枚举
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyType`
+
+**用途**: 定义验证码类型。
+
+```java
+public enum VerifyType {
+    SLIDER("滑动拼图验证", "slider"),
+    TEXT_CLICK("文字点选验证", "text_click"),
+    ARITHMETIC("算术验证码", "arithmetic"),
+    MIXED("混合验证", "mixed");
+}
+```
+
+| 枚举值 | 显示名称 | 代码 | 说明 |
+|--------|----------|------|------|
+| SLIDER | 滑动拼图验证 | slider | 滑块拼图验证码 |
+| TEXT_CLICK | 文字点选验证 | text_click | 文字点选验证码 |
+| ARITHMETIC | 算术验证码 | arithmetic | 数学运算验证码 |
+| MIXED | 混合验证 | mixed | 混合验证（随机选择） |
+
+```java
+// 方法
+public String getDisplayName()  // 获取显示名称
+public String getCode()          // 获取类型代码
+```
+
+---
+
+### VerifyState - 验证状态枚举
+
+**完整类名**: `VerifyPane.VerifyState`（VerifyPane 接口内部枚举）
+
+**用途**: 定义验证状态。
+
+```java
+public enum VerifyState {
+    READY("ready"),      // 准备就绪
+    LOADING("loading"),  // 加载中
+    VERIFYING("verifying"), // 验证中
+    SUCCESS("success"),  // 验证成功
+    FAIL("fail");        // 验证失败
+}
+```
+
+| 枚举值 | 代码 | 说明 |
+|--------|------|------|
+| READY | ready | 准备就绪，等待用户操作 |
+| LOADING | loading | 加载中 |
+| VERIFYING | verifying | 验证中 |
+| SUCCESS | success | 验证成功 |
+| FAIL | fail | 验证失败 |
+
+```java
+// 方法
+public String getCode()                           // 获取状态代码
+public static VerifyState fromCode(String code)   // 根据代码获取状态
+```
+
+---
+
+## 异常类
+
+### VerifyException - 验证码异常类
+
+**完整类名**: `com.javafx.test.verifyCode.VerifyException`
+
+**用途**: 验证码相关异常。
+
+```java
+public class VerifyException extends RuntimeException
+```
+
+#### 属性
+
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| errorCode | String | 错误代码 |
+
+#### 静态工厂方法
+
+| 方法 | 错误代码 | 说明 |
+|------|----------|------|
+| configError(String) | CONFIG_ERROR | 配置错误 |
+| imageGenerationError(String, Throwable) | IMAGE_GENERATION_ERROR | 图片生成错误 |
+| verifyFailed(String) | VERIFY_FAILED | 验证失败 |
+| robotDetected() | ROBOT_DETECTED | 检测到机器人行为 |
+| timeout() | TIMEOUT | 验证超时 |
+| invalidState(String) | INVALID_STATE | 状态错误 |
+
+---
+
+## 使用场景示例
+
+### 场景1: 快速集成滑块验证码
+
+```java
+public class LoginController {
+    
+    @FXML private VBox verifyContainer;
+    
+    public void showVerify() {
+        List<String> backgroundImages = Arrays.asList(
+            "img/verify/bg1.jpg", "img/verify/bg2.jpg"
+        );
+        
+        // 一行代码集成
+        VerifyCodeFactory.integrateSlider(verifyContainer, backgroundImages, result -> {
+            if (result.isSuccess()) {
+                proceedToLogin();
+            }
+        });
+    }
+}
+```
+
+### 场景2: 弹出窗口验证
+
+```java
+public void verifyBeforeAction() {
+    VerifyConfig config = VerifyConfig.slider()
+        .backgroundImages(backgroundImages)
+        .theme(VerifyTheme.BLUE);
+    
+    SliderVerifyPane pane = new SliderVerifyPane(config);
+    
+    // 设置验证码图片
+    try {
+        VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(config);
+        pane.setVerifyImage(image);
+    } catch (IOException e) {
+        e.printStackTrace();
+        return;
+    }
+    
+    // 设置回调
+    pane.setOnVerifyComplete(result -> {
+        if (result.isSuccess()) {
+            performAction();
+        }
+    });
+    
+    // 显示为模态窗口
+    pane.showModal(getPrimaryStage());
+}
+```
+
+### 场景3: 自定义主题和国际化
+
+```java
+// 创建自定义主题
+VerifyTheme theme = VerifyTheme.builder()
+    .primaryColor(Color.valueOf("#ff6600"))
+    .backgroundColor(Color.valueOf("#fff8f0"))
+    .build();
+
+// 创建配置
+VerifyConfig config = VerifyConfig.slider()
+    .size(400, 250)
+    .theme(theme)
+    .locale(Locale.US)
+    .backgroundImages(backgroundImages);
+
+// 创建组件
+SliderVerifyPane pane = new SliderVerifyPane(config);
+```
+
+### 场景4: 混合验证码
+
+```java
+// 随机选择验证码类型
+Pane verifyPane = VerifyCodeFactory.createRandom();
+
+if (verifyPane instanceof SliderVerifyPane) {
+    ((SliderVerifyPane) verifyPane).setOnVerifyComplete(callback);
+    // 设置滑块图片...
+} else if (verifyPane instanceof TextClickVerifyPane) {
+    ((TextClickVerifyPane) verifyPane).setOnVerifyComplete(callback);
+    // 设置文字点选数据...
+} else if (verifyPane instanceof ArithmeticVerifyPane) {
+    ((ArithmeticVerifyPane) verifyPane).setOnVerifyComplete(callback);
+    // 设置算术数据...
+}
+
+container.getChildren().add(verifyPane);
+```
+
+### 场景5: 行为轨迹分析
+
+```java
+pane.setOnVerifyComplete(result -> {
+    TrajectoryData trajectory = result.getTrajectoryData();
+    
+    if (trajectory != null) {
+        System.out.println("=== 行为轨迹分析 ===");
+        System.out.println("轨迹点数: " + trajectory.getPointCount());
+        System.out.println("总时长: " + trajectory.getDuration() + "ms");
+        System.out.println("总移动距离: " + trajectory.getTotalDistance() + "px");
+        System.out.println("平均速度: " + trajectory.getAverageSpeed() + "px/ms");
+        System.out.println("方向变化次数: " + trajectory.getDirectionChanges());
+        System.out.println("疑似机器人: " + trajectory.isRobotSuspected());
+    }
+});
+```
+
+---
+
+## 错误处理与异常
+
+### 异常类型
+
+| 异常类型 | 错误代码 | 触发场景 |
+|----------|----------|----------|
+| IOException | - | 图片文件读取失败 |
+| IllegalArgumentException | - | 参数无效 |
+| VerifyException | CONFIG_ERROR | 配置错误 |
+| VerifyException | IMAGE_GENERATION_ERROR | 图片生成失败 |
+| VerifyException | VERIFY_FAILED | 验证失败 |
+| VerifyException | ROBOT_DETECTED | 检测到机器人行为 |
+| VerifyException | TIMEOUT | 验证超时 |
+| VerifyException | INVALID_STATE | 状态错误 |
+| RuntimeException | - | Base64 解码失败 |
+
+### 错误处理示例
+
+```java
+try {
+    VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(config);
+    pane.setVerifyImage(image);
+} catch (IOException e) {
+    throw VerifyException.imageGenerationError("图片生成失败: " + e.getMessage(), e);
+} catch (IllegalArgumentException e) {
+    throw VerifyException.configError("配置无效: " + e.getMessage());
+}
+```
+
+### 常见错误及解决方案
+
+| 错误信息 | 原因 | 解决方案 |
+|----------|------|----------|
+| 未配置背景图片路径 | backgroundImages 为空 | 调用 `setBackgroundImages()` |
+| 无法读取图片 | 文件路径错误 | 检查路径是否正确 |
+| verifyImage 不能为 null | 未设置验证码图片 | 调用 `setVerifyImage()` |
+| Base64转图片失败 | Base64 格式错误 | 检查编码是否正确 |
+
+---
+
+## 组件间关系
+
+### 类关系图
+
+```mermaid
+classDiagram
+    class VerifyPane {
+        <<interface>>
+        +getRoot() Pane
+        +getState() VerifyState
+        +setOnVerifyComplete()
+        +refresh()
+        +reset()
+        +show() Stage
+        +close()
+    }
+    
+    class SliderVerifyPane {
+        -config: VerifyConfig
+        -verifyImage: VerifyImage
+        -behaviorTracker: BehaviorTracker
+        +setVerifyImage()
+    }
+    
+    class TextClickVerifyPane {
+        -config: VerifyConfig
+        -verifyData: TextClickVerifyData
+        +setVerifyData()
+    }
+    
+    class ArithmeticVerifyPane {
+        -config: VerifyConfig
+        -verifyData: ArithmeticVerifyData
+        +setVerifyData()
+    }
+    
+    class VerifyCodeFactory {
+        <<utility>>
+        +createSlider() SliderVerifyPane
+        +createTextClick() TextClickVerifyPane
+        +createArithmetic() ArithmeticVerifyPane
+        +integrateSlider()
+    }
+    
+    class VerifyStageManager {
+        <<utility>>
+        +show() Stage
+        +showModal() Stage
+        +close()
+        +shutdown()
+    }
+    
+    VerifyPane <|.. SliderVerifyPane
+    VerifyPane <|.. TextClickVerifyPane
+    VerifyPane <|.. ArithmeticVerifyPane
+    VerifyCodeFactory ..> SliderVerifyPane
+    VerifyCodeFactory ..> TextClickVerifyPane
+    VerifyCodeFactory ..> ArithmeticVerifyPane
+    VerifyStageManager ..> VerifyPane
+```
+
+---
+
+## 性能考虑与最佳实践
+
+### 性能优化建议
+
+1. **图片缓存**: 启用 BufferedImage 缓存，避免重复解码
+2. **尺寸控制**: 根据实际显示区域设置合适尺寸
+3. **预加载**: 启动时预加载背景图片列表
+4. **资源释放**: 应用退出时调用 `VerifyStageManager.shutdown()`
+
+### 安全最佳实践
+
+1. **服务端验证**: 验证必须在服务端进行
+2. **限制次数**: 限制验证尝试次数
+3. **时效性**: 设置验证码有效期
+4. **行为检测**: 启用行为轨迹检测防止机器人
+
+### 用户体验最佳实践
+
+1. **合理容差**: 根据设备类型设置容差值
+2. **难度递增**: 根据用户行为动态调整难度
+3. **友好提示**: 提供清晰的错误提示信息
+4. **延迟刷新**: 验证失败后延迟刷新，让用户看到失败原因
+

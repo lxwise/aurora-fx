@@ -85,10 +85,12 @@ public class VerifyImageUtil {
         if (filePath.startsWith("http") || filePath.startsWith("file:") || filePath.startsWith("jar:")) {
             srcImage = ImageIO.read(new URL(filePath));
         } else {
-            // 尝试从 classpath 读取
+            // 尝试从 classpath 读取（使用try-with-resources确保InputStream关闭）
             InputStream is = VerifyImageUtil.class.getClassLoader().getResourceAsStream(filePath);
             if (is != null) {
-                srcImage = ImageIO.read(is);
+                try (InputStream closableIs = is) {
+                    srcImage = ImageIO.read(closableIs);
+                }
             } else {
                 // fallback：当作本地文件
                 srcImage = ImageIO.read(new File(filePath));
@@ -708,10 +710,11 @@ public class VerifyImageUtil {
      * @throws IOException 编码异常
      */
     public static String imageToBase64(BufferedImage image) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", out);
-        byte[] bytes = out.toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ImageIO.write(image, "png", out);
+            byte[] bytes = out.toByteArray();
+            return Base64.getEncoder().encodeToString(bytes);
+        }
     }
 
     /**

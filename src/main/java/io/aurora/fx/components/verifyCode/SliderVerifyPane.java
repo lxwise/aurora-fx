@@ -1,6 +1,7 @@
 package io.aurora.fx.components.verifyCode;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
@@ -21,14 +22,50 @@ import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 滑动拼图验证码组件
  * 提供类似极验的滑块验证功能
+ * <p>
+ * 使用示例：
+ * <pre>
+ * VerifyConfig config = VerifyConfig.slider().size(350, 200).tolerance(8);
+ * SliderVerifyPane pane = new SliderVerifyPane(config);
+ * pane.setVerifyImage(verifyImage);
+ * pane.setOnVerifyComplete(result -> {
+ *     if (result.isSuccess()) {
+ *         System.out.println("验证成功");
+ *     }
+ * });
+ * </pre>
+ *
  * @author JavaFX Team
+ * @since 1.0.0
  */
 public class SliderVerifyPane extends VBox implements VerifyPane {
+
+    private static final Logger LOGGER = Logger.getLogger(SliderVerifyPane.class.getName());
+
+    /**
+     * 定时任务执行器，用于延迟重置操作
+     * 使用守护线程，不阻止JVM退出
+     */
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "SliderVerifyPane-Scheduler");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
+     * 验证失败后自动重置的延迟时间（毫秒）
+     */
+    private static final long FAIL_RESET_DELAY_MS = 1500;
 
     private static final String DEFAULT_STYLE = 
             "-fx-background-color: #ffffff; " +
@@ -62,11 +99,9 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
     private double dragStartX = 0;
     private double sliderStartX = 0;
     private boolean dragging = false;
-    
-    // 使用VerifyPane接口中定义的VerifyState枚举
 
     /**
-     * 创建滑动验证码组件
+     * 创建滑动验证码组件（使用默认配置）
      */
     public SliderVerifyPane() {
         this(new VerifyConfig());
@@ -74,10 +109,10 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
 
     /**
      * 创建滑动验证码组件
-     * @param config 验证码配置
+     * @param config 验证码配置，不能为null
      */
     public SliderVerifyPane(VerifyConfig config) {
-        this.config = config;
+        this.config = config != null ? config : new VerifyConfig();
         initializeUI();
         setupEventHandlers();
     }
@@ -265,6 +300,13 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
      * 验证滑块位置
      */
     private void verify(int sliderX, TrajectoryData trajectoryData) {
+        // 防御性检查：verifyImage 可能尚未设置
+        if (verifyImage == null) {
+            LOGGER.warning("验证码图片尚未设置，无法验证");
+            state.set(VerifyPane.VerifyState.FAIL);
+            return;
+        }
+
         state.set(VerifyPane.VerifyState.VERIFYING);
         
         long duration = System.currentTimeMillis() - startTime;
@@ -298,9 +340,13 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
         // 动画效果
         playResultAnimation(success);
         
-        // 回调
+        // 回调（带异常保护）
         if (onVerifyComplete != null) {
-            onVerifyComplete.accept(result);
+            try {
+                onVerifyComplete.accept(result);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "验证回调执行异常", e);
+            }
         }
     }
 
@@ -316,20 +362,15 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
         ft.setCycleCount(2);
         ft.play();
         
-        // 失败后自动重置
+        // 失败后自动重置（使用scheduler替代new Thread）
         if (!success) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1500);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                javafx.application.Platform.runLater(() -> {
+            scheduler.schedule(() -> {
+                Platform.runLater(() -> {
                     if (state.get() == VerifyPane.VerifyState.FAIL) {
                         reset();
                     }
                 });
-            }).start();
+            }, FAIL_RESET_DELAY_MS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -383,9 +424,13 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
 
     /**
      * 设置验证码图片
-     * @param verifyImage 验证码图片数据
+     * @param verifyImage 验证码图片数据，不能为null
      */
     public void setVerifyImage(VerifyImage verifyImage) {
+        if (verifyImage == null) {
+            LOGGER.warning("verifyImage 不能为 null");
+            return;
+        }
         this.verifyImage = verifyImage;
         
         try {
@@ -404,7 +449,6 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
             }
             
             // 设置滑块初始位置：X=0，Y=缺口的Y坐标
-            // 使用Pane作为容器，layoutX/Y可以直接生效
             sliderImageView.setLayoutX(0);
             sliderImageView.setLayoutY(verifyImage.getYPosition());
             
@@ -415,7 +459,7 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
             state.set(VerifyPane.VerifyState.READY);
             
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "设置验证码图片失败", e);
             state.set(VerifyPane.VerifyState.FAIL);
         }
     }
@@ -464,6 +508,11 @@ public class SliderVerifyPane extends VBox implements VerifyPane {
 
     public void setOnVerifyComplete(Consumer<VerifyResult> callback) {
         this.onVerifyComplete = callback;
+    }
+
+    @Override
+    public Consumer<VerifyResult> getOnVerifyComplete() {
+        return onVerifyComplete;
     }
 
     public void setOnRefresh(Runnable callback) {
