@@ -1,6 +1,7 @@
 package io.aurora.fx.components.verifyCode;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
@@ -20,14 +21,50 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 算术验证码组件
  * 用户需要计算并输入正确的数学运算结果
+ * <p>
+ * 使用示例：
+ * <pre>
+ * VerifyConfig config = VerifyConfig.arithmetic().numberRange(1, 50);
+ * ArithmeticVerifyPane pane = new ArithmeticVerifyPane(config);
+ * pane.setVerifyData(verifyData);
+ * pane.setOnVerifyComplete(result -> {
+ *     if (result.isSuccess()) {
+ *         System.out.println("验证成功");
+ *     }
+ * });
+ * </pre>
+ *
  * @author JavaFX Team
+ * @since 1.0.0
  */
 public class ArithmeticVerifyPane extends VBox implements VerifyPane {
+
+    private static final Logger LOGGER = Logger.getLogger(ArithmeticVerifyPane.class.getName());
+
+    /**
+     * 定时任务执行器，用于延迟重置操作
+     * 使用守护线程，不阻止JVM退出
+     */
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "ArithmeticVerifyPane-Scheduler");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /**
+     * 验证失败后自动重置的延迟时间（毫秒）
+     */
+    private static final long FAIL_RESET_DELAY_MS = 2000;
 
     private static final String DEFAULT_STYLE = 
             "-fx-background-color: #ffffff; " +
@@ -55,11 +92,9 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
     // 回调
     private Consumer<VerifyResult> onVerifyComplete;
     private Runnable onRefresh;
-    
-    // 使用VerifyPane接口中定义的VerifyState枚举
 
     /**
-     * 创建算术验证码组件
+     * 创建算术验证码组件（使用默认配置）
      */
     public ArithmeticVerifyPane() {
         this(new VerifyConfig(VerifyType.ARITHMETIC));
@@ -67,10 +102,10 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
 
     /**
      * 创建算术验证码组件
-     * @param config 验证码配置
+     * @param config 验证码配置，不能为null
      */
     public ArithmeticVerifyPane(VerifyConfig config) {
-        this.config = config;
+        this.config = config != null ? config : new VerifyConfig(VerifyType.ARITHMETIC);
         initializeUI();
         setupEventHandlers();
     }
@@ -180,6 +215,14 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
      * 验证答案
      */
     private void verify() {
+        // 防御性检查：verifyData 必须已设置
+        if (verifyData == null) {
+            LOGGER.warning("验证码数据尚未设置，无法验证");
+            statusLabel.setText("请先加载验证码");
+            statusLabel.setStyle("-fx-text-fill: #ff4d4f; -fx-font-size: 12;");
+            return;
+        }
+
         String answerText = answerField.getText().trim();
         
         if (answerText.isEmpty()) {
@@ -215,9 +258,13 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
             // 播放结果动画
             playResultAnimation(success);
 
-            // 回调
+            // 回调（带异常保护）
             if (onVerifyComplete != null) {
-                onVerifyComplete.accept(result);
+                try {
+                    onVerifyComplete.accept(result);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "验证回调执行异常", e);
+                }
             }
 
         } catch (NumberFormatException e) {
@@ -238,19 +285,15 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
         ft.setCycleCount(2);
         ft.play();
 
+        // 失败后自动重置（使用scheduler替代new Thread）
         if (!success) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                javafx.application.Platform.runLater(() -> {
+            scheduler.schedule(() -> {
+                Platform.runLater(() -> {
                     if (state.get() == VerifyPane.VerifyState.FAIL) {
                         reset();
                     }
                 });
-            }).start();
+            }, FAIL_RESET_DELAY_MS, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -312,8 +355,14 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
 
     /**
      * 设置验证码数据
+     *
+     * @param data 算术验证码数据，不能为null
      */
     public void setVerifyData(VerifyImageUtil.ArithmeticVerifyData data) {
+        if (data == null) {
+            LOGGER.warning("验证码数据不能为 null");
+            return;
+        }
         this.verifyData = data;
         startTime = System.currentTimeMillis();
 
@@ -330,7 +379,7 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
             answerField.requestFocus();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "设置验证码数据失败", e);
             state.set(VerifyPane.VerifyState.FAIL);
         }
     }
@@ -377,6 +426,11 @@ public class ArithmeticVerifyPane extends VBox implements VerifyPane {
 
     public void setOnVerifyComplete(Consumer<VerifyResult> callback) {
         this.onVerifyComplete = callback;
+    }
+
+    @Override
+    public Consumer<VerifyResult> getOnVerifyComplete() {
+        return onVerifyComplete;
     }
 
     public void setOnRefresh(Runnable callback) {

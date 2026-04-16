@@ -9,8 +9,8 @@ import javafx.scene.input.MouseEvent;
  */
 public class BehaviorTracker {
 
-    private TrajectoryData trajectoryData;
-    private boolean tracking = false;
+    private volatile TrajectoryData trajectoryData;
+    private volatile boolean tracking = false;
     private double lastX = 0;
     private double lastY = 0;
     private long lastTime = 0;

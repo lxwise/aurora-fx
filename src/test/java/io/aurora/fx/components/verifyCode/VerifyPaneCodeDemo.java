@@ -18,36 +18,35 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * JavaFX验证码系统 - 基于VerifyPane统一接口的演示程序
- * <p>
+ * 
  * 本演示程序展示如何使用VerifyPane统一接口操作三种验证码类型：
  * 1. 滑动拼图验证码 (SliderVerifyPane implements VerifyPane)
- * 2. 文字点选验证码 (TextClickVerifyPane implements VerifyPane)
+ * 2. 文字点选验证码 (TextClickVerifyPane implements VerifyPane)  
  * 3. 算术验证验证码 (ArithmeticVerifyPane implements VerifyPane)
- * <p>
+ * 
  * 核心演示点：
  * - 使用VerifyPane接口类型接收不同实现类（多态）
  * - 通过getRoot()获取组件根容器添加到界面
  * - 统一的方式设置回调和处理验证结果
  * - 统一调用refresh()和reset()方法
- *
+ * 
  * @author JavaFX Team
  * @since 1.0.0
  */
 public class VerifyPaneCodeDemo extends Application {
-    private static final List<String> BACKGROUND_IMAGES = new ArrayList<>();
-    //private static final List<String> BACKGROUND_IMAGES = Arrays.asList(
-//        "https://i0.hdslb.com/bfs/article/4bfb3057864685e8e9ad8c056d07c2874fde1afd.jpg",
-//        "https://i2.hdslb.com/bfs/archive/1a0ac15ec89f78ea76a47adff7d22e467a8ae9c8.jpg",
-//        "https://i0.hdslb.com/bfs/archive/c5e8d57f5c9962dd6eb7ba49ed6cf271e5231a2a.jpg",
-//        "https://pic.rmb.bdstatic.com/85fef0d4bbc654d1031bb0978f55b9fd.jpeg@s_0,w_2000"
-//);
+
+    // 背景图片路径列表
+    private static final List<String> BACKGROUND_IMAGES = Arrays.asList(
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl1.jpg",
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl2.jpg",
+            "D:\\workfile\\javafx\\src\\main\\resources\\img\\girl3.jpg"
+    );
+
     // 状态标签
     private Label statusLabel;
 
@@ -57,43 +56,16 @@ public class VerifyPaneCodeDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        loadBackgroundImages();
-
-
         primaryStage.setTitle("VerifyPane统一接口演示");
 
         // 创建主界面
         VBox root = createMainUI();
-
+        
         Scene scene = new Scene(root, 900, 750);
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(700);
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    /**
-     * 图片加载方法
-     */
-    private void loadBackgroundImages() {
-        BACKGROUND_IMAGES.clear();
-
-        for (int i = 1; i <= 5; i++) {
-            String path = "images/bg" + i + ".png";
-
-            URL resource = getClass().getClassLoader().getResource(path);
-            if (resource != null) {
-                // ✔ 推荐：直接存 classpath 相对路径
-                BACKGROUND_IMAGES.add(path);
-                System.out.println("已加载: " + path);
-            } else {
-                System.err.println("未找到: " + path);
-            }
-        }
-
-        if (BACKGROUND_IMAGES.isEmpty()) {
-            throw new RuntimeException("没有加载到任何图片！");
-        }
     }
 
     /**
@@ -127,22 +99,22 @@ public class VerifyPaneCodeDemo extends Application {
 
         // 添加三种验证码演示选项卡 - 都使用VerifyPane接口
         tabPane.getTabs().addAll(
-                new Tab("滑动拼图", createVerifyPaneDemo(VerifyType.SLIDER)),
-                new Tab("文字点选", createVerifyPaneDemo(VerifyType.TEXT_CLICK)),
-                new Tab("算术验证", createVerifyPaneDemo(VerifyType.ARITHMETIC)),
-                new Tab("统一接口", createInterfaceDemo())
+            new Tab("滑动拼图", createVerifyPaneDemo(VerifyType.SLIDER)),
+            new Tab("文字点选", createVerifyPaneDemo(VerifyType.TEXT_CLICK)),
+            new Tab("算术验证", createVerifyPaneDemo(VerifyType.ARITHMETIC)),
+            new Tab("统一接口", createInterfaceDemo())
         );
 
         VBox.setVgrow(tabPane, Priority.ALWAYS);
         container.getChildren().addAll(titleLabel, subtitleLabel, statusLabel, tabPane);
-
+        
         return container;
     }
 
     /**
      * 创建基于VerifyPane接口的验证码演示区域
      * 这是核心演示方法：使用VerifyPane接口类型统一处理不同验证码组件
-     *
+     * 
      * @param type 验证码类型
      * @return 演示区域容器
      */
@@ -154,7 +126,7 @@ public class VerifyPaneCodeDemo extends Application {
         // 根据类型创建说明标签
         String title = getVerifyTypeTitle(type);
         Label descLabel = createDescLabel(title);
-
+        
         // 显示代码示例
         Label codeLabel = createCodeLabel(getCodeExample(type));
 
@@ -162,7 +134,7 @@ public class VerifyPaneCodeDemo extends Application {
         // 核心演示：使用VerifyPane接口创建组件
         // ============================================
         VerifyPane verifyPane = createVerifyPane(type);
-
+        
         // 设置验证完成回调（统一接口方法）
         verifyPane.setOnVerifyComplete(result -> {
             handleVerifyResult(result, type.getDisplayName());
@@ -191,7 +163,7 @@ public class VerifyPaneCodeDemo extends Application {
         // 核心演示：通过getRoot()获取根容器添加到界面
         // ============================================
         Pane verifyRoot = verifyPane.getRoot();
-
+        
         // 创建控制按钮区域
         HBox controlBox = createControlBox(verifyPane);
 
@@ -202,7 +174,7 @@ public class VerifyPaneCodeDemo extends Application {
     /**
      * 创建VerifyPane接口实现实例
      * 使用工厂模式根据类型创建对应组件
-     *
+     * 
      * @param type 验证码类型
      * @return VerifyPane接口实例
      */
@@ -211,23 +183,23 @@ public class VerifyPaneCodeDemo extends Application {
             case SLIDER:
                 // 创建滑动拼图验证码
                 return new SliderVerifyPane();
-
+                
             case TEXT_CLICK:
                 // 创建文字点选验证码（使用自定义配置）
                 VerifyConfig textConfig = VerifyConfig.createTextClick()
-                        .clickTextCount(3)
-                        .interferenceTextCount(5)
-                        .tolerance(15)
-                        .size(350, 200);
+                    .clickTextCount(3)
+                    .interferenceTextCount(5)
+                    .tolerance(15)
+                    .size(350, 200);
                 return new TextClickVerifyPane(textConfig);
-
+                
             case ARITHMETIC:
                 // 创建算术验证码（使用自定义配置）
                 VerifyConfig arithmeticConfig = VerifyConfig.createArithmetic()
-                        .numberRange(10, 99)
-                        .operators(Arrays.asList("+", "-", "×"));
+                    .numberRange(10, 99)
+                    .operators(Arrays.asList("+", "-", "×"));
                 return new ArithmeticVerifyPane(arithmeticConfig);
-
+                
             default:
                 throw new IllegalArgumentException("不支持的验证码类型: " + type);
         }
@@ -236,9 +208,9 @@ public class VerifyPaneCodeDemo extends Application {
     /**
      * 刷新验证码
      * 使用VerifyPane接口统一刷新不同组件
-     *
+     * 
      * @param verifyPane VerifyPane接口实例
-     * @param type       验证码类型
+     * @param type 验证码类型
      */
     private void refreshVerifyPane(VerifyPane verifyPane, VerifyType type) {
         try {
@@ -247,28 +219,28 @@ public class VerifyPaneCodeDemo extends Application {
                     // 刷新滑块验证码
                     SliderVerifyPane sliderPane = (SliderVerifyPane) verifyPane;
                     String imagePath = BACKGROUND_IMAGES.get(
-                            (int) (Math.random() * BACKGROUND_IMAGES.size())
+                        (int) (Math.random() * BACKGROUND_IMAGES.size())
                     );
                     VerifyImage image = VerifyImageUtil.generateSliderVerifyImage(
-                            imagePath,
-                            sliderPane.getConfig()
+                        imagePath, 
+                        sliderPane.getConfig()
                     );
                     sliderPane.setVerifyImage(image);
                     break;
-
+                    
                 case TEXT_CLICK:
                     // 刷新文字点选验证码
                     TextClickVerifyPane textPane = (TextClickVerifyPane) verifyPane;
-                    VerifyImageUtil.TextClickVerifyData textData =
-                            VerifyImageUtil.generateTextClickVerify(textPane.getConfig());
+                    VerifyImageUtil.TextClickVerifyData textData = 
+                        VerifyImageUtil.generateTextClickVerify(textPane.getConfig());
                     textPane.setVerifyData(textData);
                     break;
-
+                    
                 case ARITHMETIC:
                     // 刷新算术验证码
                     ArithmeticVerifyPane arithmeticPane = (ArithmeticVerifyPane) verifyPane;
-                    VerifyImageUtil.ArithmeticVerifyData arithmeticData =
-                            VerifyImageUtil.generateArithmeticVerify(arithmeticPane.getConfig());
+                    VerifyImageUtil.ArithmeticVerifyData arithmeticData = 
+                        VerifyImageUtil.generateArithmeticVerify(arithmeticPane.getConfig());
                     arithmeticPane.setVerifyData(arithmeticData);
                     break;
             }
@@ -280,7 +252,7 @@ public class VerifyPaneCodeDemo extends Application {
     /**
      * 创建控制按钮区域
      * 演示使用VerifyPane接口的通用方法
-     *
+     * 
      * @param verifyPane VerifyPane接口实例
      * @return 控制按钮容器
      */
@@ -302,7 +274,7 @@ public class VerifyPaneCodeDemo extends Application {
         // 状态显示 - 使用统一接口的getState()方法
         Label stateLabel = new Label("状态: " + verifyPane.getState().getCode());
         stateLabel.setStyle("-fx-text-fill: #666;");
-
+        
         // 绑定状态属性（使用统一接口的stateProperty()）
         verifyPane.stateProperty().addListener((obs, oldVal, newVal) -> {
             stateLabel.setText("状态: " + newVal.getCode());
@@ -326,24 +298,24 @@ public class VerifyPaneCodeDemo extends Application {
 
         // 接口定义
         Label interfaceLabel = createCodeLabel(
-                "public interface VerifyPane {\n" +
-                        "    // 获取根容器 - 用于添加到界面\n" +
-                        "    Pane getRoot();\n\n" +
-                        "    // 获取当前状态\n" +
-                        "    VerifyState getState();\n\n" +
-                        "    // 获取状态属性（支持绑定）\n" +
-                        "    ObjectProperty<VerifyState> stateProperty();\n\n" +
-                        "    // 设置验证完成回调\n" +
-                        "    void setOnVerifyComplete(Consumer<VerifyResult> callback);\n\n" +
-                        "    // 设置刷新回调\n" +
-                        "    void setOnRefresh(Runnable callback);\n\n" +
-                        "    // 刷新验证码\n" +
-                        "    void refresh();\n\n" +
-                        "    // 重置验证码状态\n" +
-                        "    void reset();\n\n" +
-                        "    // 获取验证码配置\n" +
-                        "    VerifyConfig getConfig();\n" +
-                        "}"
+            "public interface VerifyPane {\n" +
+            "    // 获取根容器 - 用于添加到界面\n" +
+            "    Pane getRoot();\n\n" +
+            "    // 获取当前状态\n" +
+            "    VerifyState getState();\n\n" +
+            "    // 获取状态属性（支持绑定）\n" +
+            "    ObjectProperty<VerifyState> stateProperty();\n\n" +
+            "    // 设置验证完成回调\n" +
+            "    void setOnVerifyComplete(Consumer<VerifyResult> callback);\n\n" +
+            "    // 设置刷新回调\n" +
+            "    void setOnRefresh(Runnable callback);\n\n" +
+            "    // 刷新验证码\n" +
+            "    void refresh();\n\n" +
+            "    // 重置验证码状态\n" +
+            "    void reset();\n\n" +
+            "    // 获取验证码配置\n" +
+            "    VerifyConfig getConfig();\n" +
+            "}"
         );
 
         // 使用示例
@@ -352,35 +324,35 @@ public class VerifyPaneCodeDemo extends Application {
         usageLabel.setTextFill(Color.valueOf("#1e90ff"));
 
         Label usageCodeLabel = createCodeLabel(
-                "// 1. 使用接口类型声明\n" +
-                        "VerifyPane verifyPane;\n\n" +
-                        "// 2. 根据条件创建不同实现\n" +
-                        "if (type == VerifyType.SLIDER) {\n" +
-                        "    verifyPane = new SliderVerifyPane(config);\n" +
-                        "} else if (type == VerifyType.TEXT_CLICK) {\n" +
-                        "    verifyPane = new TextClickVerifyPane(config);\n" +
-                        "} else {\n" +
-                        "    verifyPane = new ArithmeticVerifyPane(config);\n" +
-                        "}\n\n" +
-                        "// 3. 统一方式设置回调\n" +
-                        "verifyPane.setOnVerifyComplete(result -> {\n" +
-                        "    // 处理验证结果\n" +
-                        "});\n\n" +
-                        "// 4. 通过getRoot()获取组件添加到界面\n" +
-                        "Pane root = verifyPane.getRoot();\n" +
-                        "myContainer.getChildren().add(root);\n\n" +
-                        "// 5. 统一方式刷新和重置\n" +
-                        "verifyPane.refresh();\n" +
-                        "verifyPane.reset();"
+            "// 1. 使用接口类型声明\n" +
+            "VerifyPane verifyPane;\n\n" +
+            "// 2. 根据条件创建不同实现\n" +
+            "if (type == VerifyType.SLIDER) {\n" +
+            "    verifyPane = new SliderVerifyPane(config);\n" +
+            "} else if (type == VerifyType.TEXT_CLICK) {\n" +
+            "    verifyPane = new TextClickVerifyPane(config);\n" +
+            "} else {\n" +
+            "    verifyPane = new ArithmeticVerifyPane(config);\n" +
+            "}\n\n" +
+            "// 3. 统一方式设置回调\n" +
+            "verifyPane.setOnVerifyComplete(result -> {\n" +
+            "    // 处理验证结果\n" +
+            "});\n\n" +
+            "// 4. 通过getRoot()获取组件添加到界面\n" +
+            "Pane root = verifyPane.getRoot();\n" +
+            "myContainer.getChildren().add(root);\n\n" +
+            "// 5. 统一方式刷新和重置\n" +
+            "verifyPane.refresh();\n" +
+            "verifyPane.reset();"
         );
 
         container.getChildren().addAll(
-                titleLabel,
-                interfaceLabel,
-                usageLabel,
-                usageCodeLabel
+            titleLabel, 
+            interfaceLabel, 
+            usageLabel, 
+            usageCodeLabel
         );
-
+        
         return container;
     }
 
@@ -436,19 +408,19 @@ public class VerifyPaneCodeDemo extends Application {
         switch (type) {
             case SLIDER:
                 return "// 创建滑动拼图验证码\n" +
-                        "VerifyPane verifyPane = new SliderVerifyPane(config);\n" +
-                        "Pane root = verifyPane.getRoot();\n" +
-                        "container.getChildren().add(root);";
+                       "VerifyPane verifyPane = new SliderVerifyPane(config);\n" +
+                       "Pane root = verifyPane.getRoot();\n" +
+                       "container.getChildren().add(root);";
             case TEXT_CLICK:
                 return "// 创建文字点选验证码\n" +
-                        "VerifyPane verifyPane = new TextClickVerifyPane(config);\n" +
-                        "Pane root = verifyPane.getRoot();\n" +
-                        "container.getChildren().add(root);";
+                       "VerifyPane verifyPane = new TextClickVerifyPane(config);\n" +
+                       "Pane root = verifyPane.getRoot();\n" +
+                       "container.getChildren().add(root);";
             case ARITHMETIC:
                 return "// 创建算术验证码\n" +
-                        "VerifyPane verifyPane = new ArithmeticVerifyPane(config);\n" +
-                        "Pane root = verifyPane.getRoot();\n" +
-                        "container.getChildren().add(root);";
+                       "VerifyPane verifyPane = new ArithmeticVerifyPane(config);\n" +
+                       "Pane root = verifyPane.getRoot();\n" +
+                       "container.getChildren().add(root);";
             default:
                 return "";
         }
