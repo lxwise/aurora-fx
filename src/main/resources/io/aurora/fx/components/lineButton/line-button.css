@@ -1,0 +1,10 @@
+.aurora-line-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 8 16;
+}
+
+.aurora-line-button .line {
+    -fx-stroke: #409EFF;
+    -fx-stroke-width: 1.5;
+}

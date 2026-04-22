@@ -1,0 +1,10 @@
+.aurora-avatar {
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+}
+
+.aurora-avatar .avatar-placeholder {
+    -fx-alignment: center;
+    -fx-text-fill: #C0C4CC;
+    -fx-font-weight: bold;
+}

@@ -1,6 +1,8 @@
 package io.aurora.fx;
 
 import atlantafx.base.theme.PrimerLight;
+import io.aurora.fx.theme.Windows11Dark;
+import io.aurora.fx.theme.Windows11Light;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -34,7 +36,7 @@ public class JavaFXDemoLauncher extends Application {
     @Override
     public void start(Stage stage) {
         // 设置 AtlantaFX 主题 - PrimerLight
-        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        Application.setUserAgentStylesheet(new Windows11Light().getUserAgentStylesheet());
 
         loadLocalData();
 
